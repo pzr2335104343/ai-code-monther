@@ -9,7 +9,7 @@ import com.rong.rongaicodemonther.exception.BusinessException;
 import com.rong.rongaicodemonther.exception.ErrorCode;
 import com.rong.rongaicodemonther.mapper.UserMapper;
 import com.rong.rongaicodemonther.model.dto.UserQueryRequest;
-import com.rong.rongaicodemonther.model.entity.LoginUserVo;
+import com.rong.rongaicodemonther.model.vo.LoginUserVo;
 import com.rong.rongaicodemonther.model.entity.User;
 import com.rong.rongaicodemonther.model.enums.UserRoleEnum;
 import com.rong.rongaicodemonther.model.vo.UserVO;

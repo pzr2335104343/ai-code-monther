@@ -11,7 +11,7 @@ import com.rong.rongaicodemonther.exception.BusinessException;
 import com.rong.rongaicodemonther.exception.ErrorCode;
 import com.rong.rongaicodemonther.exception.ThrowUtils;
 import com.rong.rongaicodemonther.model.dto.*;
-import com.rong.rongaicodemonther.model.entity.LoginUserVo;
+import com.rong.rongaicodemonther.model.vo.LoginUserVo;
 import com.rong.rongaicodemonther.model.vo.UserVO;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
