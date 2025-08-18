@@ -1,6 +1,12 @@
 spring:
   application:
     name: rong-ai-code-monther-backend
+  # DataSource Config
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/rong_ai_code_monther
+    username: root
+    password: 123456
 server:
   port: 8123
   servlet:

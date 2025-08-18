@@ -1,4 +1,5 @@
-package com.rong.rongaicodemonther.common;
+package com.rong.rongaicodemonther.config;
+
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
