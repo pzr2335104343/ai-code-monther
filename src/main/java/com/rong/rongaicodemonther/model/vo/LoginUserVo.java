@@ -1,4 +1,4 @@
-package com.rong.rongaicodemonther.model.entity;
+package com.rong.rongaicodemonther.model.vo;
 
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
