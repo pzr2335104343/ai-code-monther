@@ -32,14 +32,7 @@ import static com.rong.rongaicodemonther.constant.UserConstant.USER_LOGIN_STATE;
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-    /**
-     * 用户注册方法
-     *
-     * @param userAccount   用户账号，用于唯一标识一个用户
-     * @param userPassword  用户密码，需要进行加密处理
-     * @param checkPassword 确认密码，用于二次验证用户输入的密码是否正确
-     * @return 返回值类型为long，可能是用户ID或者表示操作状态的数值
-     */
+
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
         // 1. 校验
