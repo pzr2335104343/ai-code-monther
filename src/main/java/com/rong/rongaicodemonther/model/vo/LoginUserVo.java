@@ -87,22 +87,9 @@ public class LoginUserVo implements Serializable {
     private Long vipNumber;
 
     /**
-     * 编辑时间
-     */
-    @Column("editTime")
-    private LocalDateTime editTime;
-
-    /**
      * 创建时间
      */
     @Column("createTime")
     private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @Column("updateTime")
-    private LocalDateTime updateTime;
-
 
 }

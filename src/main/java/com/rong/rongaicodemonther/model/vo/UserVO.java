@@ -1,5 +1,6 @@
 package com.rong.rongaicodemonther.model.vo;
 
+import com.mybatisflex.annotation.Column;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -37,6 +38,24 @@ public class UserVO implements Serializable {
      * 用户角色：user/admin
      */
     private String userRole;
+
+    /**
+     * 会员过期时间
+     */
+    @Column("vipExpireTime")
+    private LocalDateTime vipExpireTime;
+
+    /**
+     * 会员兑换码
+     */
+    @Column("vipCode")
+    private String vipCode;
+
+    /**
+     * 会员编号
+     */
+    @Column("vipNumber")
+    private Long vipNumber;
 
     /**
      * 创建时间
