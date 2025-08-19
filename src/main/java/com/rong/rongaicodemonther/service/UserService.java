@@ -4,7 +4,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.rong.rongaicodemonther.model.dto.UserQueryRequest;
 import com.rong.rongaicodemonther.model.entity.User;
-import com.rong.rongaicodemonther.model.vo.LoginUserVo;
+import com.rong.rongaicodemonther.model.vo.LoginUserVO;
 import com.rong.rongaicodemonther.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -25,7 +25,7 @@ public interface UserService extends IService<User> {
     /**
      * 用户登录
      */
-    LoginUserVo userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      * 用户注销
@@ -40,7 +40,7 @@ public interface UserService extends IService<User> {
     /**
      * 获取当前登录用户信息(脱敏)
      */
-    LoginUserVo getLoginUserVo(User user);
+    LoginUserVO getLoginUserVO(User user);
 
     /**
      * 获取当前登录用户信息

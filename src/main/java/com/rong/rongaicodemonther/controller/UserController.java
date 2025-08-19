@@ -12,7 +12,7 @@ import com.rong.rongaicodemonther.exception.ErrorCode;
 import com.rong.rongaicodemonther.exception.ThrowUtils;
 import com.rong.rongaicodemonther.model.dto.*;
 import com.rong.rongaicodemonther.model.entity.User;
-import com.rong.rongaicodemonther.model.vo.LoginUserVo;
+import com.rong.rongaicodemonther.model.vo.LoginUserVO;
 import com.rong.rongaicodemonther.model.vo.UserVO;
 import com.rong.rongaicodemonther.service.UserService;
 import jakarta.annotation.Resource;
@@ -50,11 +50,11 @@ public class UserController {
      * 用户登录接口
      */
     @PostMapping("/login")
-    public BaseResponse<LoginUserVo> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
-        LoginUserVo user = userService.userLogin(userAccount, userPassword,request);
+        LoginUserVO user = userService.userLogin(userAccount, userPassword,request);
         return ResultUtils.success(user);
     }
     /**
@@ -68,11 +68,12 @@ public class UserController {
     /**
      * 获取登录用户信息
      */
-    @PostMapping("/get/login")
-    public BaseResponse<User> userGetLogin(@RequestBody HttpServletRequest request) {
-        User user = userService.getLoginUser(request);
-        return ResultUtils.success(user);
+    @GetMapping("/get/login")
+    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.getLoginUserVO(loginUser));
     }
+
 
     /**
      * 创建用户

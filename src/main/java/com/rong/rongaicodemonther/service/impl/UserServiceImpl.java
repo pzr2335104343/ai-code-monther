@@ -11,7 +11,7 @@ import com.rong.rongaicodemonther.mapper.UserMapper;
 import com.rong.rongaicodemonther.model.dto.UserQueryRequest;
 import com.rong.rongaicodemonther.model.entity.User;
 import com.rong.rongaicodemonther.model.enums.UserRoleEnum;
-import com.rong.rongaicodemonther.model.vo.LoginUserVo;
+import com.rong.rongaicodemonther.model.vo.LoginUserVO;
 import com.rong.rongaicodemonther.model.vo.UserVO;
 import com.rong.rongaicodemonther.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,7 +64,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVo userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1. 校验
         if (StrUtil.hasBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名或密码不能为空");
@@ -79,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户名或密码错误");
         }
         request.getSession().setAttribute(USER_LOGIN_STATE, userResult);
-        return getLoginUserVo(userResult);
+        return getLoginUserVO(userResult);
     }
 
     @Override
@@ -114,11 +114,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVo getLoginUserVo(User user) {
+    public LoginUserVO getLoginUserVO(User user) {
         if (user == null) {
             return null;
         }
-        LoginUserVo loginUserVo = new LoginUserVo();
+        LoginUserVO loginUserVo = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVo);
         return loginUserVo;
     }
