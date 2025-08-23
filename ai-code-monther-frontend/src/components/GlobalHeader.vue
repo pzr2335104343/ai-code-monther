@@ -7,7 +7,6 @@
           <img src="@/assets/logo.svg" alt="Logo" class="logo" />
           <h1 class="site-title">AI Code Mother</h1>
         </div>
-
         <!-- 菜单 -->
         <a-menu
           v-model:selectedKeys="selectedKeys"
@@ -20,7 +19,22 @@
 
       <!-- 右侧用户信息 -->
       <div class="header-right">
-        <a-button type="primary" @click="handleLogin">
+        <div v-if="loginUserStore.loginUser.id">
+          <a-dropdown>
+            <a-space>
+              <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+              {{ loginUserStore.loginUser.userName ?? '无名' }}
+            </a-space>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item key="logout" @click="handleLogout">
+                  <a-space> <LogoutOutlined />退出登录 </a-space>
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
+        <a-button v-else type="primary" @click="handleLogin">
           <template #icon>
             <UserOutlined />
           </template>
@@ -32,44 +46,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { UserOutlined } from '@ant-design/icons-vue'
+import { useLoginUserStore } from '@/stores/loginUser.ts'
+import { LogoutOutlined } from '@ant-design/icons-vue'
+import { userLogout } from '@/api/userController.ts'
+import { message } from 'ant-design-vue'
+import routes from '@/router/routes.ts'
+import checkAccess from '@/access/checkAccess.ts'
 
 const router = useRouter()
 const selectedKeys = ref<string[]>(['home'])
-
-// 菜单配置
-const menuItems = [
-  {
-    key: 'home',
-    label: '首页',
-    path: '/',
-  },
-  {
-    key: 'about',
-    label: '关于',
-    path: '/about',
-  },
-]
-
+const loginUserStore = useLoginUserStore()
+// 菜单配置项 - 直接根据权限过滤和转换
+const menuItems = computed(() =>
+  routes
+    .filter(
+      (item) =>
+        !item.meta?.hideInMenu && checkAccess(loginUserStore.loginUser, item.meta?.requireAuth),
+    )
+    .map((item) => ({
+      key: item.path as string,
+      label: item.name as string,
+      path: item.path as string,
+      icon: () => item.meta?.icon,
+    })),
+)
 // 菜单点击处理
 const handleMenuClick = ({ key }: { key: string }) => {
-  const menuItem = menuItems.find((item) => item.key === key)
+  const menuItem = menuItems.value?.find((item) => item?.key === key)
   if (menuItem) {
     router.push(menuItem.path)
   }
 }
 
+const handleLogout = async () => {
+  const res = await userLogout()
+  if (res.data.code === 0) {
+    loginUserStore.setLoginUser({ userName: '未登录' })
+    loginUserStore.resetFetchStatus() // 重置首次获取状态
+    message.success('注销成功')
+    router.push('/user/login')
+  } else {
+    message.error('注销失败')
+  }
+}
+
 // 登录处理
 const handleLogin = () => {
-  console.log('登录按钮点击')
-  // TODO: 实现登录逻辑
+  router.push('/user/login')
 }
 
 // 监听路由变化
 router.afterEach((to) => {
-  selectedKeys.value = [to.name]
+  selectedKeys.value = [to.name as string]
 })
 </script>
 
@@ -98,6 +129,7 @@ router.afterEach((to) => {
 
 .header-left {
   display: flex;
+  width: 90%;
   align-items: center;
   gap: 48px;
 }
@@ -122,6 +154,7 @@ router.afterEach((to) => {
 
 .header-menu {
   border: none;
+  width: 70%;
   background: transparent;
   line-height: 64px;
 }
