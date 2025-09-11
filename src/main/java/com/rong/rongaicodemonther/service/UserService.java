@@ -2,7 +2,7 @@ package com.rong.rongaicodemonther.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
-import com.rong.rongaicodemonther.model.dto.UserQueryRequest;
+import com.rong.rongaicodemonther.model.dto.user.UserQueryRequest;
 import com.rong.rongaicodemonther.model.entity.User;
 import com.rong.rongaicodemonther.model.vo.LoginUserVO;
 import com.rong.rongaicodemonther.model.vo.UserVO;

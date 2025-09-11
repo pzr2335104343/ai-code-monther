@@ -5,7 +5,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.rong.rongaicodemonther.exception.BusinessException;
 import com.rong.rongaicodemonther.exception.ErrorCode;
-import com.rong.rongaicodemonther.model.dto.AppQueryRequest;
+import com.rong.rongaicodemonther.model.dto.app.AppQueryRequest;
 import com.rong.rongaicodemonther.model.entity.App;
 import com.rong.rongaicodemonther.mapper.AppMapper;
 import com.rong.rongaicodemonther.model.entity.User;

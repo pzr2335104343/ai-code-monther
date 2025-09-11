@@ -1,4 +1,4 @@
-package com.rong.rongaicodemonther.model.dto;
+package com.rong.rongaicodemonther.model.dto.user;
 
 import lombok.Data;
 

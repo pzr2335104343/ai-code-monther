@@ -1,4 +1,4 @@
-package com.rong.rongaicodemonther.model.dto;
+package com.rong.rongaicodemonther.model.dto.app;
 
 import com.rong.rongaicodemonther.common.PageRequest;
 import lombok.Data;
