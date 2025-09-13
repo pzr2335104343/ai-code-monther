@@ -2,6 +2,7 @@ package com.rong.rongaicodemonther.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.rong.rongaicodemonther.annotation.AuthCheck;
@@ -13,19 +14,23 @@ import com.rong.rongaicodemonther.constant.UserConstant;
 import com.rong.rongaicodemonther.exception.BusinessException;
 import com.rong.rongaicodemonther.exception.ErrorCode;
 import com.rong.rongaicodemonther.exception.ThrowUtils;
-import com.rong.rongaicodemonther.model.dto.app.AppAddRequest;
-import com.rong.rongaicodemonther.model.dto.app.AppAdminUpdateRequest;
-import com.rong.rongaicodemonther.model.dto.app.AppQueryRequest;
-import com.rong.rongaicodemonther.model.dto.app.AppUpdateRequest;
+import com.rong.rongaicodemonther.model.dto.app.*;
 import com.rong.rongaicodemonther.model.entity.App;
 import com.rong.rongaicodemonther.model.entity.User;
+import com.rong.rongaicodemonther.model.enums.CodeGenTypeEnum;
 import com.rong.rongaicodemonther.model.vo.AppVO;
 import com.rong.rongaicodemonther.service.AppService;
 import com.rong.rongaicodemonther.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 
 @RestController
@@ -38,21 +43,78 @@ public class AppController {
     @Resource
     private UserService userService;
 
+    @GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chatGenCode(@RequestParam Long appId, @RequestParam String message, HttpServletRequest request) {
+        // 1. 校验参数
+        ThrowUtils.throwIf(appId == null || appId < 0, ErrorCode.PARAMS_ERROR, "应用Id错误");
+        ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "提示词不能为空");
+        // 2. 获取登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务生成代码（SSE 流式返回）
+        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
+
+        return contentFlux
+                .map(chunk->{
+                    String jsonData = JSONUtil.toJsonStr(Map.of("d", chunk));
+                    return ServerSentEvent.<String>builder()
+                            .data(jsonData)
+                            .build();
+                })
+                .concatWith(
+                        Mono.just(ServerSentEvent.<String>builder()
+                                .event("done")
+                                .build()));
+
+    }
+
     /**
-     * 应用创建接口
+     * 应用部署
+     *
+     * @param appDeployRequest 部署请求
+     * @param request          请求
+     * @return 部署 URL
+     */
+    @PostMapping("/deploy")
+    public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = appDeployRequest.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务部署应用
+        String deployUrl = appService.deployApp(appId, loginUser);
+        return ResultUtils.success(deployUrl);
+    }
+
+    /**
+     * 创建应用
+     *
+     * @param appAddRequest 创建应用请求
+     * @param request       请求
+     * @return 应用 id
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addApp(@RequestBody AppAddRequest addRequest, HttpServletRequest request) {
-        ThrowUtils.throwIf(addRequest == null, ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(StrUtil.isBlank(addRequest.getInitPrompt()), ErrorCode.PARAMS_ERROR, "initPrompt 必填");
+    public BaseResponse<Long> addApp(@RequestBody AppAddRequest appAddRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appAddRequest == null, ErrorCode.PARAMS_ERROR);
+        // 参数校验
+        String initPrompt = appAddRequest.getInitPrompt();
+        ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化 prompt 不能为空");
+        // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
+        // 构造入库对象
         App app = new App();
-        BeanUtil.copyProperties(addRequest, app);
+        BeanUtil.copyProperties(appAddRequest, app);
         app.setUserId(loginUser.getId());
+        // 应用名称暂时为 initPrompt 前 12 位
+        app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+        // 暂时设置为多文件生成
+        app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+        // 插入数据库
         boolean result = appService.save(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(app.getId());
     }
+
 
     /**
      * 【用户】根据 id 修改自己的应用（仅名称）
@@ -186,7 +248,7 @@ public class AppController {
         QueryWrapper queryWrapper = appService.getQueryWrapper(appQueryRequest);
         Page<App> appPage = appService.page(Page.of(pageNum, pageSize), queryWrapper);
         // 数据封装
-        Page<AppVO> appVOPage=new Page<>(pageNum,pageSize,appPage.getTotalRow());
+        Page<AppVO> appVOPage = new Page<>(pageNum, pageSize, appPage.getTotalRow());
         appVOPage.setRecords(appService.getAppVOList(appPage.getRecords()));
         return ResultUtils.success(appVOPage);
     }

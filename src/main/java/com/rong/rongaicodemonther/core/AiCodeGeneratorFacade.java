@@ -3,7 +3,6 @@ package com.rong.rongaicodemonther.core;
 import com.rong.rongaicodemonther.ai.AiCodeGeneratorService;
 import com.rong.rongaicodemonther.ai.model.HtmlCodeResult;
 import com.rong.rongaicodemonther.ai.model.MultiFileCodeResult;
-import com.rong.rongaicodemonther.core.parser.CodeParserExecutor;
 import com.rong.rongaicodemonther.core.saver.CodeFIleSaverExecutor;
 import com.rong.rongaicodemonther.exception.BusinessException;
 import com.rong.rongaicodemonther.exception.ErrorCode;
@@ -30,20 +29,21 @@ public class AiCodeGeneratorFacade {
      *
      * @param userMessage     用户提示词
      * @param codeGenTypeEnum 生成类型
+     * @param appId 应用id
      * @return 保存的目录
      */
-    public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum) {
+    public File generateAndSaveCode(String userMessage, CodeGenTypeEnum codeGenTypeEnum,Long appId) {
         if (codeGenTypeEnum == null) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
         }
         return switch (codeGenTypeEnum) {
             case HTML -> {
                 HtmlCodeResult result = aiCodeGeneratorService.generateHtmlCode(userMessage);
-                yield CodeFIleSaverExecutor.executeSaver(result, codeGenTypeEnum);
+                yield CodeFIleSaverExecutor.executeSaver(result,codeGenTypeEnum,appId);
             }
             case MULTI_FILE -> {
                 MultiFileCodeResult result = aiCodeGeneratorService.generateMultiFileCode(userMessage);
-                yield CodeFIleSaverExecutor.executeSaver(result, codeGenTypeEnum);
+                yield CodeFIleSaverExecutor.executeSaver(result,codeGenTypeEnum,appId);
             }
             default -> {
                 String errorMessage = "不支持的生成类型：" + codeGenTypeEnum.getValue();
@@ -57,20 +57,21 @@ public class AiCodeGeneratorFacade {
      *
      * @param userMessage     用户提示词
      * @param codeGenTypeEnum 生成类型
+     * @param appId 应用id
      * @return 保存的目录
      */
-    public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum) {
+    public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum,Long appId) {
         if (codeGenTypeEnum == null) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
         }
         return switch (codeGenTypeEnum) {
             case HTML -> {
                 Flux<String> codeStream = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
-                yield processCodeStream(codeStream, codeGenTypeEnum);
+                yield processCodeStream(codeStream, codeGenTypeEnum,appId);
             }
             case MULTI_FILE -> {
                 Flux<String> codeStream = aiCodeGeneratorService.generateMultiFileCodeStream(userMessage);
-                yield processCodeStream(codeStream, codeGenTypeEnum);
+                yield processCodeStream(codeStream, codeGenTypeEnum,appId);
             }
             default -> {
                 String errorMessage = "不支持的生成类型：" + codeGenTypeEnum.getValue();
@@ -84,20 +85,19 @@ public class AiCodeGeneratorFacade {
      *
      * @param codeStream  代码流
      * @param codeGenType 生成类型
+     * @param appId 应用id
      * @return 处理后的代码流
      */
-    private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType) {
+    private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType,Long appId) {
 
         StringBuilder completeCode = new StringBuilder();
         return codeStream.doOnNext(completeCode::append).doOnComplete(() -> {
             try {
-                // 解析代码
-                Object htmlCodeResult = CodeParserExecutor.executeParser(completeCode.toString(), codeGenType);
-                // 保存代码
-                File file = CodeFIleSaverExecutor.executeSaver(htmlCodeResult, codeGenType);
+                // 根据类型解析并保存代码
+                File file = generateAndSaveCode(completeCode.toString(), codeGenType, appId);
                 log.info("保存的文件路径为：{}", file.getAbsolutePath());
             } catch (Exception e) {
-                log.error("生成HTML代码失败", e);
+                log.error("生成代码失败", e);
             }
         });
     }
