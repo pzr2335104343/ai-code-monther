@@ -1,44 +1,3 @@
-<script lang="ts" setup>
-import { reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
-import { userRegister } from '@/api/userController.ts'
-
-const formState = reactive<API.UserRegisterRequest>({
-  userAccount: '',
-  userPassword: '',
-  checkPassword: '',
-})
-const router = useRouter()
-
-/**
- * 验证确认密码
- */
-const validateCheckPassword = async (_rule: any, value: string) => {
-  if (value !== formState.userPassword) {
-    throw new Error('两次输入的密码不一致')
-  }
-}
-
-/**
- * 提交表单
- * @param values
- */
-const handleSubmit = async (values: any) => {
-  const res = await userRegister(values)
-  // 注册成功，跳转到登录页面
-  if (res.data.code === 0) {
-    message.success('注册成功，请登录')
-    router.push({
-      path: '/user/login',
-      replace: true,
-    })
-  } else {
-    message.error('注册失败，' + res.data.message)
-  }
-}
-</script>
-
 <template>
   <div id="userRegisterPage">
     <h2 class="title">用户注册</h2>
@@ -85,6 +44,47 @@ const handleSubmit = async (values: any) => {
     </a-form>
   </div>
 </template>
+
+<script lang="ts" setup>
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { userRegister } from '@/api/userController.ts'
+
+const formState = reactive<API.UserRegisterRequest>({
+  userAccount: '',
+  userPassword: '',
+  checkPassword: '',
+})
+const router = useRouter()
+
+/**
+ * 验证确认密码
+ */
+const validateCheckPassword = async (_rule: any, value: string) => {
+  if (value !== formState.userPassword) {
+    throw new Error('两次输入的密码不一致')
+  }
+}
+
+/**
+ * 提交表单
+ * @param values
+ */
+const handleSubmit = async (values: any) => {
+  const res = await userRegister(values)
+  // 注册成功，跳转到登录页面
+  if (res.data.code === 0) {
+    message.success('注册成功，请登录')
+    router.push({
+      path: '/user/login',
+      replace: true,
+    })
+  } else {
+    message.error('注册失败，' + res.data.message)
+  }
+}
+</script>
 
 <style>
 #userRegisterPage {
