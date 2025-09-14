@@ -12,12 +12,16 @@
         <a-select
           v-model:value="searchParams.codeGenType"
           placeholder="选择生成类型"
-          style="width: 120px"
+          style="width: 150px"
         >
           <a-select-option value="">全部</a-select-option>
-          <a-select-option value="html">HTML</a-select-option>
-          <a-select-option value="react">React</a-select-option>
-          <a-select-option value="vue">Vue</a-select-option>
+          <a-select-option
+            v-for="option in CODE_GEN_TYPE_OPTIONS"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item>
@@ -44,24 +48,24 @@
             <div class="prompt-text">{{ record.initPrompt }}</div>
           </a-tooltip>
         </template>
+        <template v-else-if="column.dataIndex === 'codeGenType'">
+          {{ formatCodeGenType(record.codeGenType) }}
+        </template>
         <template v-else-if="column.dataIndex === 'priority'">
           <a-tag v-if="record.priority === 99" color="gold">精选</a-tag>
           <span v-else>{{ record.priority || 0 }}</span>
         </template>
         <template v-else-if="column.dataIndex === 'deployedTime'">
           <span v-if="record.deployedTime">
-            {{ dayjs(record.deployedTime).format('YYYY-MM-DD HH:mm:ss') }}
+            {{ formatTime(record.deployedTime) }}
           </span>
           <span v-else class="text-gray">未部署</span>
         </template>
         <template v-else-if="column.dataIndex === 'createTime'">
-          {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ formatTime(record.createTime) }}
         </template>
         <template v-else-if="column.dataIndex === 'user'">
-          <div class="user-info">
-            <a-avatar :src="record.user?.userAvatar" size="small" />
-            <span>{{ record.user?.userName || '未知用户' }}</span>
-          </div>
+          <UserInfo :user="record.user" size="small" />
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
@@ -89,7 +93,9 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { listAppVoByPageByAdmin, deleteAppByAdmin, updateAppByAdmin } from '@/api/appController'
-import dayjs from 'dayjs'
+import { CODE_GEN_TYPE_OPTIONS, formatCodeGenType } from '@/utils/codeGenTypes'
+import { formatTime } from '@/utils/time'
+import UserInfo from '@/components/UserInfo.vue'
 
 const router = useRouter()
 
@@ -259,6 +265,8 @@ const deleteApp = async (id: number | undefined) => {
 <style scoped>
 #appManagePage {
   padding: 24px;
+  background: white;
+  margin-top: 16px;
 }
 
 .no-cover {
@@ -278,12 +286,6 @@ const deleteApp = async (id: number | undefined) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .text-gray {

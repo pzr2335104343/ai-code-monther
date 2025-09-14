@@ -3,14 +3,15 @@
     <!-- 顶部栏 -->
     <div class="header-bar">
       <div class="header-left">
-        <a-button type="text" @click="goBack">
-          <template #icon>
-            <ArrowLeftOutlined />
-          </template>
-        </a-button>
-        <h1 class="app-name">{{ appInfo?.appName || '个人博客生成器' }}</h1>
+        <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
       </div>
       <div class="header-right">
+        <a-button type="default" @click="showAppDetail">
+          <template #icon>
+            <InfoCircleOutlined />
+          </template>
+          应用详情
+        </a-button>
         <a-button type="primary" @click="deployApp" :loading="deploying">
           <template #icon>
             <CloudUploadOutlined />
@@ -35,10 +36,10 @@
             </div>
             <div v-else class="ai-message">
               <div class="message-avatar">
-                <a-avatar style="background-color: #1890ff">AI</a-avatar>
+                <a-avatar :src="aiAvatar" />
               </div>
               <div class="message-content">
-                <div v-if="message.content" v-html="formatMessage(message.content)"></div>
+                <MarkdownRenderer v-if="message.content" :content="message.content" />
                 <div v-if="message.loading" class="loading-indicator">
                   <a-spin size="small" />
                   <span>AI 正在思考...</span>
@@ -51,16 +52,32 @@
         <!-- 用户消息输入框 -->
         <div class="input-container">
           <div class="input-wrapper">
+            <a-tooltip v-if="!isOwner" title="无法在别人的作品下对话哦~" placement="top">
+              <a-textarea
+                v-model:value="userInput"
+                placeholder="请描述你想生成的网站，越详细效果越好哦"
+                :rows="4"
+                :maxlength="1000"
+                @keydown.enter.prevent="sendMessage"
+                :disabled="isGenerating || !isOwner"
+              />
+            </a-tooltip>
             <a-textarea
+              v-else
               v-model:value="userInput"
-              placeholder="描述你想要的修改..."
-              :rows="3"
+              placeholder="请描述你想生成的网站，越详细效果越好哦"
+              :rows="4"
               :maxlength="1000"
               @keydown.enter.prevent="sendMessage"
               :disabled="isGenerating"
             />
             <div class="input-actions">
-              <a-button type="primary" @click="sendMessage" :loading="isGenerating">
+              <a-button
+                type="primary"
+                @click="sendMessage"
+                :loading="isGenerating"
+                :disabled="!isOwner"
+              >
                 <template #icon>
                   <SendOutlined />
                 </template>
@@ -103,45 +120,48 @@
       </div>
     </div>
 
+    <!-- 应用详情弹窗 -->
+    <AppDetailModal
+      v-model:open="appDetailVisible"
+      :app="appInfo"
+      :show-actions="isOwner || isAdmin"
+      @edit="editApp"
+      @delete="deleteApp"
+    />
+
     <!-- 部署成功弹窗 -->
-    <a-modal v-model:open="deployModalVisible" title="部署成功" :footer="null" width="600px">
-      <div class="deploy-success">
-        <div class="success-icon">
-          <CheckCircleOutlined style="color: #52c41a; font-size: 48px" />
-        </div>
-        <h3>网站部署成功！</h3>
-        <p>你的网站已经成功部署，可以通过以下链接访问：</p>
-        <div class="deploy-url">
-          <a-input :value="deployUrl" readonly>
-            <template #suffix>
-              <a-button type="text" @click="copyUrl">
-                <CopyOutlined />
-              </a-button>
-            </template>
-          </a-input>
-        </div>
-        <div class="deploy-actions">
-          <a-button type="primary" @click="openDeployedSite">访问网站</a-button>
-          <a-button @click="deployModalVisible = false">关闭</a-button>
-        </div>
-      </div>
-    </a-modal>
+    <DeploySuccessModal
+      v-model:open="deployModalVisible"
+      :deploy-url="deployUrl"
+      @open-site="openDeployedSite"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { getAppVoById, deployApp as deployAppApi } from '@/api/appController'
 import {
-  ArrowLeftOutlined,
+  getAppVoById,
+  deployApp as deployAppApi,
+  deleteApp as deleteAppApi,
+} from '@/api/appController'
+import { CodeGenTypeEnum } from '@/utils/codeGenTypes'
+import request from '@/request'
+
+import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import AppDetailModal from '@/components/AppDetailModal.vue'
+import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
+import aiAvatar from '@/assets/aiAvatar.png'
+import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
+
+import {
   CloudUploadOutlined,
   SendOutlined,
   ExportOutlined,
-  CheckCircleOutlined,
-  CopyOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -150,7 +170,7 @@ const loginUserStore = useLoginUserStore()
 
 // 应用信息
 const appInfo = ref<API.AppVO>()
-const appId = ref<number>()
+const appId = ref<string>()
 
 // 对话相关
 interface Message {
@@ -163,6 +183,7 @@ const messages = ref<Message[]>([])
 const userInput = ref('')
 const isGenerating = ref(false)
 const messagesContainer = ref<HTMLElement>()
+const hasInitialConversation = ref(false) // 标记是否已经进行过初始对话
 
 // 预览相关
 const previewUrl = ref('')
@@ -173,6 +194,23 @@ const deploying = ref(false)
 const deployModalVisible = ref(false)
 const deployUrl = ref('')
 
+// 权限相关
+const isOwner = computed(() => {
+  return appInfo.value?.userId === loginUserStore.loginUser.id
+})
+
+const isAdmin = computed(() => {
+  return loginUserStore.loginUser.userRole === 'admin'
+})
+
+// 应用详情相关
+const appDetailVisible = ref(false)
+
+// 显示应用详情
+const showAppDetail = () => {
+  appDetailVisible.value = true
+}
+
 // 获取应用信息
 const fetchAppInfo = async () => {
   const id = route.params.id as string
@@ -182,15 +220,19 @@ const fetchAppInfo = async () => {
     return
   }
 
-  appId.value = Number(id)
+  appId.value = id
 
   try {
-    const res = await getAppVoById({ id: Number(id) })
+    const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
       appInfo.value = res.data.data
 
-      // 自动发送初始提示词
-      if (appInfo.value.initPrompt) {
+      // 检查是否有view=1参数，如果有则不自动发送初始提示词
+      const isViewMode = route.query.view === '1'
+
+      // 自动发送初始提示词（除非是查看模式或已经进行过初始对话）
+      if (appInfo.value.initPrompt && !isViewMode && !hasInitialConversation.value) {
+        hasInitialConversation.value = true
         await sendInitialMessage(appInfo.value.initPrompt)
       }
     } else {
@@ -259,75 +301,105 @@ const sendMessage = async () => {
   await generateCode(message, aiMessageIndex)
 }
 
-// 生成代码
+// 生成代码 - 使用 EventSource 处理流式响应
 const generateCode = async (userMessage: string, aiMessageIndex: number) => {
+  let eventSource: EventSource | null = null
+  let streamCompleted = false
+
   try {
-    const response = await fetch('/api/app/chat/gen/code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        appId: appId.value,
-        message: userMessage,
-      }),
+    // 获取 axios 配置的 baseURL
+    const baseURL = request.defaults.baseURL || API_BASE_URL
+
+    // 构建URL参数
+    const params = new URLSearchParams({
+      appId: appId.value || '',
+      message: userMessage,
     })
 
-    if (!response.ok) {
-      throw new Error('网络请求失败')
-    }
+    const url = `${baseURL}/app/chat/gen/code?${params}`
 
-    const reader = response.body?.getReader()
-    const decoder = new TextDecoder()
+    // 创建 EventSource 连接
+    eventSource = new EventSource(url, {
+      withCredentials: true,
+    })
+
     let fullContent = ''
 
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+    // 处理接收到的消息
+    eventSource.onmessage = function (event) {
+      if (streamCompleted) return
 
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n')
+      try {
+        // 解析JSON包装的数据
+        const parsed = JSON.parse(event.data)
+        const content = parsed.d
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              // 生成完成，更新预览
-              updatePreview()
-              break
-            }
-
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.content) {
-                fullContent += parsed.content
-                messages.value[aiMessageIndex].content = fullContent
-                messages.value[aiMessageIndex].loading = false
-                await nextTick()
-                scrollToBottom()
-              }
-            } catch {
-              // 忽略解析错误
-            }
-          }
+        // 拼接内容
+        if (content !== undefined && content !== null) {
+          fullContent += content
+          messages.value[aiMessageIndex].content = fullContent
+          messages.value[aiMessageIndex].loading = false
+          scrollToBottom()
         }
+      } catch (error) {
+        console.error('解析消息失败:', error)
+        handleError(error, aiMessageIndex)
+      }
+    }
+
+    // 处理done事件
+    eventSource.addEventListener('done', function () {
+      if (streamCompleted) return
+
+      streamCompleted = true
+      isGenerating.value = false
+      eventSource?.close()
+
+      // 延迟更新预览，确保后端已完成处理
+      setTimeout(async () => {
+        await fetchAppInfo()
+        updatePreview()
+      }, 1000)
+    })
+
+    // 处理错误
+    eventSource.onerror = function () {
+      if (streamCompleted || !isGenerating.value) return
+      // 检查是否是正常的连接关闭
+      if (eventSource?.readyState === EventSource.CONNECTING) {
+        streamCompleted = true
+        isGenerating.value = false
+        eventSource?.close()
+
+        setTimeout(async () => {
+          await fetchAppInfo()
+          updatePreview()
+        }, 1000)
+      } else {
+        handleError(new Error('SSE连接错误'), aiMessageIndex)
       }
     }
   } catch (error) {
-    console.error('生成代码失败：', error)
-    messages.value[aiMessageIndex].content = '抱歉，生成过程中出现了错误，请重试。'
-    messages.value[aiMessageIndex].loading = false
-    message.error('生成失败，请重试')
-  } finally {
-    isGenerating.value = false
+    console.error('创建 EventSource 失败：', error)
+    handleError(error, aiMessageIndex)
   }
+}
+
+// 错误处理函数
+const handleError = (error: unknown, aiMessageIndex: number) => {
+  console.error('生成代码失败：', error)
+  messages.value[aiMessageIndex].content = '抱歉，生成过程中出现了错误，请重试。'
+  messages.value[aiMessageIndex].loading = false
+  message.error('生成失败，请重试')
+  isGenerating.value = false
 }
 
 // 更新预览
 const updatePreview = () => {
-  if (appInfo.value?.codeGenType && appId.value) {
-    previewUrl.value = `http://localhost:8123/api/static/${appInfo.value.codeGenType}_${appId.value}/`
+  if (appId.value) {
+    const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
+    const newPreviewUrl = getStaticPreviewUrl(codeGenType, appId.value)
+    previewUrl.value = newPreviewUrl
     previewReady.value = true
   }
 }
@@ -337,16 +409,6 @@ const scrollToBottom = () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
   }
-}
-
-// 格式化消息内容
-const formatMessage = (content: string) => {
-  return content.replace(/\n/g, '<br>')
-}
-
-// 返回上一页
-const goBack = () => {
-  router.back()
 }
 
 // 部署应用
@@ -359,7 +421,7 @@ const deployApp = async () => {
   deploying.value = true
   try {
     const res = await deployAppApi({
-      appId: appId.value,
+      appId: appId.value as unknown as number,
     })
 
     if (res.data.code === 0 && res.data.data) {
@@ -391,20 +453,35 @@ const openDeployedSite = () => {
   }
 }
 
-// 复制链接
-const copyUrl = async () => {
-  try {
-    await navigator.clipboard.writeText(deployUrl.value)
-    message.success('链接已复制到剪贴板')
-  } catch (error) {
-    console.error('复制失败：', error)
-    message.error('复制失败')
-  }
-}
-
 // iframe加载完成
 const onIframeLoad = () => {
   previewReady.value = true
+}
+
+// 编辑应用
+const editApp = () => {
+  if (appInfo.value?.id) {
+    router.push(`/app/edit/${appInfo.value.id}`)
+  }
+}
+
+// 删除应用
+const deleteApp = async () => {
+  if (!appInfo.value?.id) return
+
+  try {
+    const res = await deleteAppApi({ id: appInfo.value.id })
+    if (res.data.code === 0) {
+      message.success('删除成功')
+      appDetailVisible.value = false
+      router.push('/')
+    } else {
+      message.error('删除失败：' + res.data.message)
+    }
+  } catch (error) {
+    console.error('删除失败：', error)
+    message.error('删除失败')
+  }
 }
 
 // 页面加载时获取应用信息
@@ -414,7 +491,7 @@ onMounted(() => {
 
 // 清理资源
 onUnmounted(() => {
-  // 清理可能的定时器或事件监听器
+  // EventSource 会在组件卸载时自动清理
 })
 </script>
 
@@ -423,7 +500,8 @@ onUnmounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
+  padding: 16px;
+  background: #fdfdfd;
 }
 
 /* 顶部栏 */
@@ -431,10 +509,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  background: white;
-  border-bottom: 1px solid #e8e8e8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
 }
 
 .header-left {
@@ -460,13 +535,13 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   gap: 16px;
-  padding: 16px;
+  padding: 8px;
   overflow: hidden;
 }
 
 /* 左侧对话区域 */
 .chat-section {
-  flex: 1;
+  flex: 2;
   display: flex;
   flex-direction: column;
   background: white;
@@ -483,7 +558,7 @@ onUnmounted(() => {
 }
 
 .message-item {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .user-message {
@@ -516,6 +591,7 @@ onUnmounted(() => {
 .ai-message .message-content {
   background: #f5f5f5;
   color: #1a1a1a;
+  padding: 8px 12px;
 }
 
 .message-avatar {
@@ -532,7 +608,6 @@ onUnmounted(() => {
 /* 输入区域 */
 .input-container {
   padding: 16px;
-  border-top: 1px solid #e8e8e8;
   background: white;
 }
 
@@ -552,7 +627,7 @@ onUnmounted(() => {
 
 /* 右侧预览区域 */
 .preview-section {
-  flex: 1;
+  flex: 3;
   display: flex;
   flex-direction: column;
   background: white;
@@ -617,37 +692,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   border: none;
-}
-
-/* 部署成功弹窗 */
-.deploy-success {
-  text-align: center;
-  padding: 24px;
-}
-
-.success-icon {
-  margin-bottom: 16px;
-}
-
-.deploy-success h3 {
-  margin: 0 0 16px;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.deploy-success p {
-  margin: 0 0 24px;
-  color: #666;
-}
-
-.deploy-url {
-  margin-bottom: 24px;
-}
-
-.deploy-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
 }
 
 /* 响应式设计 */

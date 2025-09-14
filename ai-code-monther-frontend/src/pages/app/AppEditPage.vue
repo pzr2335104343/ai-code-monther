@@ -1,12 +1,6 @@
 <template>
   <div id="appEditPage">
     <div class="page-header">
-      <a-button type="text" @click="goBack">
-        <template #icon>
-          <ArrowLeftOutlined />
-        </template>
-        返回
-      </a-button>
       <h1>编辑应用信息</h1>
     </div>
 
@@ -67,7 +61,11 @@
           </a-form-item>
 
           <a-form-item label="生成类型" name="codeGenType">
-            <a-input v-model:value="formData.codeGenType" placeholder="生成类型" disabled />
+            <a-input
+              :value="formatCodeGenType(formData.codeGenType)"
+              placeholder="生成类型"
+              disabled
+            />
             <div class="form-tip">生成类型不可修改</div>
           </a-form-item>
 
@@ -95,10 +93,7 @@
             {{ appInfo?.id }}
           </a-descriptions-item>
           <a-descriptions-item label="创建者">
-            <div class="user-info">
-              <a-avatar :src="appInfo?.user?.userAvatar" size="small" />
-              <span>{{ appInfo?.user?.userName || '未知用户' }}</span>
-            </div>
+            <UserInfo :user="appInfo?.user" size="small" />
           </a-descriptions-item>
           <a-descriptions-item label="创建时间">
             {{ formatTime(appInfo?.createTime) }}
@@ -127,8 +122,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { getAppVoById, updateApp, updateAppByAdmin } from '@/api/appController'
-import { ArrowLeftOutlined } from '@ant-design/icons-vue'
-import dayjs from 'dayjs'
+import { formatCodeGenType } from '@/utils/codeGenTypes'
+import { formatTime } from '@/utils/time'
+import UserInfo from '@/components/UserInfo.vue'
+import { getStaticPreviewUrl } from '@/config/env'
 import type { FormInstance } from 'ant-design-vue'
 
 const route = useRoute()
@@ -177,7 +174,7 @@ const fetchAppInfo = async () => {
 
   loading.value = true
   try {
-    const res = await getAppVoById({ id: Number(id) })
+    const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
       appInfo.value = res.data.data
 
@@ -256,11 +253,6 @@ const resetForm = () => {
   formRef.value?.clearValidate()
 }
 
-// 返回上一页
-const goBack = () => {
-  router.back()
-}
-
 // 进入对话页面
 const goToChat = () => {
   if (appInfo.value?.id) {
@@ -271,15 +263,9 @@ const goToChat = () => {
 // 打开预览
 const openPreview = () => {
   if (appInfo.value?.codeGenType && appInfo.value?.id) {
-    const url = `http://localhost:8123/api/static/${appInfo.value.codeGenType}_${appInfo.value.id}/`
+    const url = getStaticPreviewUrl(appInfo.value.codeGenType, String(appInfo.value.id))
     window.open(url, '_blank')
   }
-}
-
-// 格式化时间
-const formatTime = (time: string | undefined) => {
-  if (!time) return ''
-  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
 // 页面加载时获取应用信息
@@ -309,8 +295,6 @@ onMounted(() => {
 }
 
 .edit-container {
-  background: #f5f5f5;
-  padding: 24px;
   border-radius: 8px;
 }
 
@@ -326,12 +310,6 @@ onMounted(() => {
   font-size: 12px;
   color: #999;
   margin-top: 4px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 :deep(.ant-card-head) {

@@ -10,11 +10,6 @@ declare namespace API {
     priority?: number
   }
 
-  type AppChatToGenCodeRequest = {
-    appId?: number
-    message?: string
-  }
-
   type AppDeployRequest = {
     appId?: number
   }
@@ -108,6 +103,11 @@ declare namespace API {
     message?: string
   }
 
+  type chatToGenCodeParams = {
+    appId: number
+    message: string
+  }
+
   type DeleteRequest = {
     id?: number
   }
@@ -156,6 +156,8 @@ declare namespace API {
     totalRow?: number
     optimizeCountQuery?: boolean
   }
+
+  type ServerSentEventString = true
 
   type serveStaticResourceParams = {
     deployKey: string

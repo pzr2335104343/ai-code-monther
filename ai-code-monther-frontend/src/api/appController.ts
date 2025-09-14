@@ -71,17 +71,17 @@ export async function updateAppByAdmin(
   })
 }
 
-/** 此处后端没有提供注释 POST /app/chat/gen/code */
+/** 此处后端没有提供注释 GET /app/chat/gen/code */
 export async function chatToGenCode(
-  body: API.AppChatToGenCodeRequest,
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.chatToGenCodeParams,
   options?: { [key: string]: any }
 ) {
-  return request<string[]>('/app/chat/gen/code', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+  return request<API.ServerSentEventString[]>('/app/chat/gen/code', {
+    method: 'GET',
+    params: {
+      ...params,
     },
-    data: body,
     ...(options || {}),
   })
 }

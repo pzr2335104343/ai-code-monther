@@ -155,3 +155,11 @@ const doDelete = async (id: number) => {
   }
 }
 </script>
+
+<style scoped>
+#userManagePage {
+  padding: 24px;
+  background: white;
+  margin-top: 16px;
+}
+</style>
