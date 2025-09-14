@@ -111,7 +111,7 @@ declare namespace API {
     message?: string
   }
 
-  type chatGenCodeParams = {
+  type chatToGenCodeParams = {
     appId: number
     message: string
   }
@@ -124,7 +124,7 @@ declare namespace API {
     id: number
   }
 
-  type getMyAppParams = {
+  type getAppVOByIdParams = {
     id: number
   }
 
