@@ -1,7 +1,5 @@
 declare namespace API {
   type AppAddRequest = {
-    appName?: string
-    cover?: string
     initPrompt?: string
   }
 
@@ -10,6 +8,11 @@ declare namespace API {
     appName?: string
     cover?: string
     priority?: number
+  }
+
+  type AppChatToGenCodeRequest = {
+    appId?: number
+    message?: string
   }
 
   type AppDeployRequest = {
@@ -75,12 +78,6 @@ declare namespace API {
     message?: string
   }
 
-  type BaseResponseObject = {
-    code?: number
-    data?: Record<string, any>
-    message?: string
-  }
-
   type BaseResponsePageAppVO = {
     code?: number
     data?: PageAppVO
@@ -111,11 +108,6 @@ declare namespace API {
     message?: string
   }
 
-  type chatToGenCodeParams = {
-    appId: number
-    message: string
-  }
-
   type DeleteRequest = {
     id?: number
   }
@@ -143,10 +135,8 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
-    vipExpireTime?: string
-    vipCode?: string
-    vipNumber?: number
     createTime?: string
+    updateTime?: string
   }
 
   type PageAppVO = {
@@ -167,8 +157,6 @@ declare namespace API {
     optimizeCountQuery?: boolean
   }
 
-  type ServerSentEventString = true
-
   type serveStaticResourceParams = {
     deployKey: string
   }
@@ -181,9 +169,6 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
-    vipExpireTime?: string
-    vipCode?: string
-    vipNumber?: number
     editTime?: string
     createTime?: string
     updateTime?: string
@@ -236,9 +221,6 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
-    vipExpireTime?: string
-    vipCode?: string
-    vipNumber?: number
     createTime?: string
   }
 }

@@ -1,13 +1,13 @@
 {
-  "name": "ai-code-monther-frontend",
+  "name": "yu-ai-code-mother-frontend",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
-    "openapi2ts": "openapi2ts",
     "preview": "vite preview",
+    "openapi2ts": "openapi2ts",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "ant-design-vue": "^4.2.6",
-    "axios": "^1.11.0",
+    "axios": "^1.10.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1"
