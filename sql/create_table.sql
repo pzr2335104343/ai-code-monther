@@ -39,3 +39,9 @@ create table if not exists app
     INDEX idx_appName (appName),         -- 提升基于应用名称的查询性能
     INDEX idx_userId (userId)            -- 提升基于用户 ID 的查询性能
 ) comment '应用' collate = utf8mb4_unicode_ci;
+
+alter table app
+    add appVersion int not null comment '应用版本';
+alter table app
+    modify appVersion int not null comment '应用版本' after deployedTime;
+

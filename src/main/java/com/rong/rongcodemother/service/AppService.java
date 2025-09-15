@@ -28,10 +28,11 @@ public interface AppService extends IService<App> {
     /**
      *
      * @param appId 应用id
+     * @param appVersion 应用版本
      * @param loginUser 登录用户
      * @return 可访问的部署URL
      */
-    String deployApp(Long appId,User loginUser);
+    String deployApp(Long appId,String appVersion,User loginUser);
 
     /**
      * 根据查询请求获取查询条件

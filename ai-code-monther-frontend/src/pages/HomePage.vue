@@ -173,6 +173,7 @@ onMounted(() => {
           :rows="4"
           :maxlength="1000"
           class="prompt-input"
+          @keydown.enter.prevent="createApp"
         />
         <div class="input-actions">
           <a-button type="primary" size="large" @click="createApp" :loading="creating">
@@ -198,10 +199,10 @@ onMounted(() => {
           type="default"
           @click="
             setPrompt(
-              '设计一个专业的企业官网，包含公司介绍、产品服务展示、新闻资讯、联系我们等页面。采用商务风格的设计，包含轮播图、产品展示卡片、团队介绍、客户案例展示，支持多语言切换和在线客服功能。',
+              '设计一个404网站，要求不超过5行。',
             )
           "
-          >企业官网</a-button
+          >404网站</a-button
         >
         <a-button
           type="default"

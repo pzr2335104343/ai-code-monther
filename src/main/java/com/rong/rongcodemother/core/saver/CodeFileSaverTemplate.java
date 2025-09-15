@@ -24,14 +24,14 @@ public abstract class CodeFileSaverTemplate<T> {
      * 模板方法：保存代码的标准流程
      *
      * @param result 代码结果对象
-     * @param appId 应用Id
+     * @param appId  应用Id
      * @return 保存的目录
      */
-    protected final File saveCode(T result,Long appId) {
+    protected final File saveCode(T result, Long appId, int appVersion) {
         // 1. 验证输入
         validateInput(result);
         // 2. 构建唯一目录
-        String baseDirPath = buildUniqueDir(appId);
+        String baseDirPath = buildUniqueDir(appId, appVersion);
         // 3. 保存文件（具体实现由子类提供）
         saveFiles(result, baseDirPath);
         // 4. 返回目录文件对象
@@ -51,16 +51,17 @@ public abstract class CodeFileSaverTemplate<T> {
 
     /**
      * 构建唯一目录路径
+     *
      * @param appId 应用id
      * @return 目录路径
      */
-    protected final String buildUniqueDir(Long appId) {
-        if(appId==null || appId<0){
+    protected final String buildUniqueDir(Long appId, int appVersion) {
+        if (appId == null || appId < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "应用Id为空");
         }
         String codeType = getCodeType().getValue();
         String uniqueDirName = StrUtil.format("{}_{}", codeType, appId);
-        String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
+        String dirPath = String.format("%s/%s/v%s/", FILE_SAVE_ROOT_DIR, uniqueDirName, appVersion);
         FileUtil.mkdir(dirPath);
         return dirPath;
     }

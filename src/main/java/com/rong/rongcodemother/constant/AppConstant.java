@@ -27,4 +27,9 @@ public interface AppConstant {
      */
     String CODE_DEPLOY_HOST = "http://localhost";
 
+    /**
+     * 应用最大版本
+     */
+    Short APP_MAX_VERSION = 20;
+
 }

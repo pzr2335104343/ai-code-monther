@@ -1,5 +1,6 @@
 package com.rong.rongcodemother.model.vo;
 
+import com.mybatisflex.annotation.Column;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -27,6 +28,11 @@ public class AppVO implements Serializable {
      * 应用初始化的 prompt
      */
     private String initPrompt;
+
+    /**
+     * 应用版本
+     */
+    private int appVersion;
 
     /**
      * 代码生成类型（枚举）

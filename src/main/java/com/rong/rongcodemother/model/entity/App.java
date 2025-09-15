@@ -4,19 +4,23 @@ import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import java.io.Serial;
 
 import com.mybatisflex.core.keygen.KeyGenerators;
+import com.rong.rongcodemother.constant.AppConstant;
+import com.rong.rongcodemother.exception.BusinessException;
+import com.rong.rongcodemother.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- *  实体类。
+ * 实体类。
  *
  * @author rong
  */
@@ -33,7 +37,7 @@ public class App implements Serializable {
     /**
      * id
      */
-    @Id(keyType = KeyType.Generator,value= KeyGenerators.snowFlakeId)
+    @Id(keyType = KeyType.Generator, value = KeyGenerators.snowFlakeId)
     private Long id;
 
     /**
@@ -52,6 +56,12 @@ public class App implements Serializable {
      */
     @Column("initPrompt")
     private String initPrompt;
+
+    /**
+     * 应用版本
+     */
+    @Column("appVersion")
+    private Short appVersion;
 
     /**
      * 代码生成类型（枚举）
@@ -105,5 +115,21 @@ public class App implements Serializable {
      */
     @Column(value = "isDelete", isLogicDelete = true)
     private Integer isDelete;
+
+
+    /**
+     * 版本号递增方法（线程安全且带边界校验）
+     * @return 递增后的版本号，若已达最大值则返回null或抛出异常（根据业务需求选择）
+     */
+    public Short incrementAppVersion() {
+        // 校验是否已达Integer最大值，避免溢出
+        if (this.appVersion > AppConstant.APP_MAX_VERSION) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"应用版本号已达到最大值,请新建应用");
+        }
+        // 先递增再返回（确保返回的是最新值）
+        this.appVersion++;
+        return this.appVersion;
+    }
+
 
 }

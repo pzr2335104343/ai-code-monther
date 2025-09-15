@@ -12,5 +12,10 @@ public class AppDeployRequest implements Serializable {
      */
     private Long appId;
 
+    /**
+     * 应用版本
+     */
+    private Short appVersion;
+
     private static final long serialVersionUID = 1L;
 }

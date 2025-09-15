@@ -1,5 +1,7 @@
 declare namespace API {
   type AppAddRequest = {
+    appName?: string
+    cover?: string
     initPrompt?: string
   }
 
@@ -12,6 +14,7 @@ declare namespace API {
 
   type AppDeployRequest = {
     appId?: number
+    appVersion?: number
   }
 
   type AppQueryRequest = {
@@ -39,6 +42,7 @@ declare namespace API {
     appName?: string
     cover?: string
     initPrompt?: string
+    appVersion?: number
     codeGenType?: string
     deployKey?: string
     deployedTime?: string
@@ -70,6 +74,12 @@ declare namespace API {
   type BaseResponseLong = {
     code?: number
     data?: number
+    message?: string
+  }
+
+  type BaseResponseObject = {
+    code?: number
+    data?: Record<string, any>
     message?: string
   }
 
@@ -135,8 +145,10 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
+    vipExpireTime?: string
+    vipCode?: string
+    vipNumber?: number
     createTime?: string
-    updateTime?: string
   }
 
   type PageAppVO = {
@@ -171,6 +183,9 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
+    vipExpireTime?: string
+    vipCode?: string
+    vipNumber?: number
     editTime?: string
     createTime?: string
     updateTime?: string
@@ -223,6 +238,9 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
+    vipExpireTime?: string
+    vipCode?: string
+    vipNumber?: number
     createTime?: string
   }
 }

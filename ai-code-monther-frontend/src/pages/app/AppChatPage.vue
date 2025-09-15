@@ -58,7 +58,6 @@
                 placeholder="请描述你想生成的网站，越详细效果越好哦"
                 :rows="4"
                 :maxlength="1000"
-                @keydown.enter.prevent="sendMessage"
                 :disabled="isGenerating || !isOwner"
               />
             </a-tooltip>
@@ -139,14 +138,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import {
-  getAppVoById,
-  deployApp as deployAppApi,
   deleteApp as deleteAppApi,
+  deployApp as deployAppApi,
+  getAppVoById
 } from '@/api/appController'
 import { CodeGenTypeEnum } from '@/utils/codeGenTypes'
 import request from '@/request'
@@ -159,9 +158,9 @@ import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
 
 import {
   CloudUploadOutlined,
-  SendOutlined,
   ExportOutlined,
   InfoCircleOutlined,
+  SendOutlined
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -226,7 +225,6 @@ const fetchAppInfo = async () => {
     const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
       appInfo.value = res.data.data
-
       // 检查是否有view=1参数，如果有则不自动发送初始提示词
       const isViewMode = route.query.view === '1'
 
@@ -251,7 +249,7 @@ const sendInitialMessage = async (prompt: string) => {
   // 添加用户消息
   messages.value.push({
     type: 'user',
-    content: prompt,
+    content: prompt
   })
 
   // 添加AI消息占位符
@@ -259,7 +257,7 @@ const sendInitialMessage = async (prompt: string) => {
   messages.value.push({
     type: 'ai',
     content: '',
-    loading: true,
+    loading: true
   })
 
   await nextTick()
@@ -282,7 +280,7 @@ const sendMessage = async () => {
   // 添加用户消息
   messages.value.push({
     type: 'user',
-    content: message,
+    content: message
   })
 
   // 添加AI消息占位符
@@ -290,7 +288,7 @@ const sendMessage = async () => {
   messages.value.push({
     type: 'ai',
     content: '',
-    loading: true,
+    loading: true
   })
 
   await nextTick()
@@ -313,20 +311,20 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
     // 构建URL参数
     const params = new URLSearchParams({
       appId: appId.value || '',
-      message: userMessage,
+      message: userMessage
     })
 
     const url = `${baseURL}/app/chat/gen/code?${params}`
 
     // 创建 EventSource 连接
     eventSource = new EventSource(url, {
-      withCredentials: true,
+      withCredentials: true
     })
 
     let fullContent = ''
 
     // 处理接收到的消息
-    eventSource.onmessage = function (event) {
+    eventSource.onmessage = function(event) {
       if (streamCompleted) return
 
       try {
@@ -348,7 +346,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
     }
 
     // 处理done事件
-    eventSource.addEventListener('done', function () {
+    eventSource.addEventListener('done', function() {
       if (streamCompleted) return
 
       streamCompleted = true
@@ -363,7 +361,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number) => {
     })
 
     // 处理错误
-    eventSource.onerror = function () {
+    eventSource.onerror = function() {
       if (streamCompleted || !isGenerating.value) return
       // 检查是否是正常的连接关闭
       if (eventSource?.readyState === EventSource.CONNECTING) {
@@ -398,8 +396,7 @@ const handleError = (error: unknown, aiMessageIndex: number) => {
 const updatePreview = () => {
   if (appId.value) {
     const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
-    const newPreviewUrl = getStaticPreviewUrl(codeGenType, appId.value)
-    previewUrl.value = newPreviewUrl
+    previewUrl.value = getStaticPreviewUrl(codeGenType, appId.value)
     previewReady.value = true
   }
 }
@@ -422,8 +419,8 @@ const deployApp = async () => {
   try {
     const res = await deployAppApi({
       appId: appId.value as unknown as number,
+      appVersion: appInfo.value?.appVersion as number
     })
-
     if (res.data.code === 0 && res.data.data) {
       deployUrl.value = res.data.data
       deployModalVisible.value = true

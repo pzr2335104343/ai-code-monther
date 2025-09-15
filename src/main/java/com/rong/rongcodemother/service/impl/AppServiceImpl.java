@@ -22,6 +22,7 @@ import com.rong.rongcodemother.service.AppService;
 import com.rong.rongcodemother.service.UserService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -64,12 +65,18 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(app.getCodeGenType());
         ThrowUtils.throwIf(codeGenTypeEnum == null, ErrorCode.PARAMS_ERROR, "应用类型错误");
 
-        // 5.调用应用接口，代码生成文件
-        return aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+        // 5.更新应用版本
+        Short appVersion = app.incrementAppVersion();;
+        ThrowUtils.throwIf(appVersion == null, ErrorCode.SYSTEM_ERROR, "更新应用版本失败");
+        boolean updateVersionResult = this.updateById(app);
+        ThrowUtils.throwIf(!updateVersionResult, ErrorCode.SYSTEM_ERROR, "更新应用版本失败");
+
+        // 6.调用应用接口，代码生成文件
+        return aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId, appVersion);
     }
 
     @Override
-    public String deployApp(Long appId, User loginUser) {
+    public String deployApp(Long appId, String appVersion,User loginUser) {
         // 1.参数校验
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用id不能为空");
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
@@ -90,14 +97,14 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 5.获取原始代码生成路径（应用访问目录）
         String codeGenType = app.getCodeGenType();
         String sourceDirName = codeGenType + "_" + app.getId();
-        String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+        String sourceDirPath = String.format("%s/%s/%s",AppConstant.CODE_OUTPUT_ROOT_DIR,sourceDirName,appVersion);
         // 6.校验路径文件存在
         File sourceDir = new File(sourceDirPath);
         if (!sourceDir.exists() || !sourceDir.isDirectory()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "应用不存在，请先生成");
         }
         // 7.复制到部署目录
-        String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
+        String deployDirPath = String.format("%s/%s",AppConstant.CODE_DEPLOY_ROOT_DIR,deployKey);
         try {
             FileUtil.copyContent(sourceDir, new File(deployDirPath), true);
         } catch (Exception e) {
@@ -112,7 +119,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新部署应用信息失败");
         // 9.返回部署地址
-        return String.format("%s/%s",AppConstant.CODE_DEPLOY_HOST , deployKey);
+        return String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
     }
 
     @Override

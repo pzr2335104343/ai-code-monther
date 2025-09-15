@@ -21,6 +21,7 @@ import com.rong.rongcodemother.model.vo.AppVO;
 import com.rong.rongcodemother.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/app")
+@Slf4j
 public class AppController {
 
     @Resource
@@ -67,6 +69,7 @@ public class AppController {
                             .data(jsonData)
                             .build();
                 })
+                .doOnComplete(() -> log.info("AppController: contentFlux 已完成"))
                 .concatWith(Mono.just(
                         // 发送结束事件
                         ServerSentEvent.<String>builder()
@@ -91,10 +94,13 @@ public class AppController {
         Long appId = appDeployRequest.getAppId();
         // 检查应用 ID 是否为空
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取app部署版本
+        Short appVersion = appDeployRequest.getAppVersion();
+        ThrowUtils.throwIf(appVersion <= 0, ErrorCode.PARAMS_ERROR, "应用部署版本错误");
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         // 调用服务部署应用
-        String deployUrl = appService.deployApp(appId, loginUser);
+        String deployUrl = appService.deployApp(appId, "v" + appVersion,loginUser);
         // 返回部署 URL
         return ResultUtils.success(deployUrl);
     }
@@ -122,6 +128,7 @@ public class AppController {
         app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
         // 暂时设置为多文件生成
         app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+        app.setAppVersion(Short.valueOf("0"));
         // 插入数据库
         boolean result = appService.save(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

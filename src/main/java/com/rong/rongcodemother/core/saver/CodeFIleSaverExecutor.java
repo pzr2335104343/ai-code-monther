@@ -21,14 +21,14 @@ public class CodeFIleSaverExecutor {
  * @return 返回保存后的文件对象
  * @throws BusinessException 当代码生成类型不支持时抛出异常
  */
-    public static File executeSaver(Object codeRequest, CodeGenTypeEnum codeGenTypeEnum,Long appId) {
+    public static File executeSaver(Object codeRequest, CodeGenTypeEnum codeGenTypeEnum,Long appId,int appVersion) {
 
     // 使用switch表达式根据代码生成类型选择对应的保存方式
         return switch (codeGenTypeEnum) {
         // 当类型为HTML时，使用HTML代码文件保存器保存代码
-            case HTML -> htmlCodeFileSaverTemplate.saveCode((HtmlCodeResult) codeRequest,appId);
+            case HTML -> htmlCodeFileSaverTemplate.saveCode((HtmlCodeResult) codeRequest,appId,appVersion);
         // 当类型为MULTI_FILE时，使用多文件代码保存器保存代码
-            case MULTI_FILE ->multiFileCodeSaverTemplate.saveCode((MultiFileCodeResult) codeRequest,appId);
+            case MULTI_FILE ->multiFileCodeSaverTemplate.saveCode((MultiFileCodeResult) codeRequest,appId,appVersion);
         // 默认情况，抛出非法参数异常
             default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持的代码生成类型");
         };
