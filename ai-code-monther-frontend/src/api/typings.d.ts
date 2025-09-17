@@ -173,6 +173,7 @@ declare namespace API {
 
   type serveStaticResourceParams = {
     deployKey: string
+    appVersion: string
   }
 
   type User = {

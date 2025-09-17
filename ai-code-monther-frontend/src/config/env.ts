@@ -17,6 +17,6 @@ export const getDeployUrl = (deployKey: string) => {
 }
 
 // 获取静态资源预览URL
-export const getStaticPreviewUrl = (codeGenType: string, appId: string) => {
-  return `${STATIC_BASE_URL}/${codeGenType}_${appId}/`
+export const getStaticPreviewUrl = (codeGenType: string, appId: string,appVersion: number) => {
+  return `${STATIC_BASE_URL}/${codeGenType}_${appId}/v${appVersion}/`
 }

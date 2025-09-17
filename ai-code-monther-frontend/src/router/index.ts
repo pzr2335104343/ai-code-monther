@@ -6,6 +6,7 @@ import UserManagePage from '@/pages/admin/UserManagePage.vue'
 import AppManagePage from '@/pages/admin/AppManagePage.vue'
 import AppChatPage from '@/pages/app/AppChatPage.vue'
 import AppEditPage from '@/pages/app/AppEditPage.vue'
+import AppCodeHistory from '@/components/AppCodeHistory.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +46,12 @@ const router = createRouter({
       name: '编辑应用',
       component: AppEditPage,
     },
+    {
+      path: '/app/history/:deployKey',
+      name: '应用历史',
+      component: AppCodeHistory,
+    },
+
   ],
 })
 

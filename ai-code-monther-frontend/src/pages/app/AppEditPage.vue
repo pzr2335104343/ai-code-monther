@@ -174,7 +174,7 @@ const fetchAppInfo = async () => {
 
   loading.value = true
   try {
-    const res = await getAppVoById({ id: id as unknown as number })
+    const res = await getAppVoById({ id: id as number })
     if (res.data.code === 0 && res.data.data) {
       appInfo.value = res.data.data
 
@@ -263,7 +263,11 @@ const goToChat = () => {
 // 打开预览
 const openPreview = () => {
   if (appInfo.value?.codeGenType && appInfo.value?.id) {
-    const url = getStaticPreviewUrl(appInfo.value.codeGenType, String(appInfo.value.id))
+    const url = getStaticPreviewUrl(
+      appInfo.value.codeGenType,
+      String(appInfo.value.id),
+      appInfo.value.appVersion as number,
+    )
     window.open(url, '_blank')
   }
 }

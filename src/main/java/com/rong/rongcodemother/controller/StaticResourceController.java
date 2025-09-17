@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.File;
 
@@ -23,15 +24,16 @@ public class StaticResourceController {
 
     /**
      * 提供静态资源访问，支持目录重定向
-     * 访问格式：http://localhost:8123/api/static/{deployKey}[/{fileName}]
+     * 访问格式：http://localhost:8123/api/static/{deployKey}/{appVersion}[/{fileName}]
      */
-    @GetMapping("/{deployKey}/**")
+    @GetMapping("/{deployKey}/{appVersion}/**")
     public ResponseEntity<Resource> serveStaticResource(
             @PathVariable String deployKey,
+            @PathVariable String appVersion,
             HttpServletRequest request) {
         try {
             // 获取资源路径
-            String resourcePath = request.getRequestURI();
+            String resourcePath = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
             // 如果是目录访问（不带斜杠），重定向到带斜杠的URL
             if (resourcePath.endsWith("/")) {
                 resourcePath = "/index.html";
@@ -41,7 +43,7 @@ public class StaticResourceController {
                 return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
             }
             // 构建文件路径
-            String filePath = PREVIEW_ROOT_DIR + "/" + deployKey + resourcePath;
+            String filePath = String.format("%s/%s/%s/%s",PREVIEW_ROOT_DIR,deployKey,appVersion,resourcePath);
             File file = new File(filePath);
             // 检查文件是否存在
             if (!file.exists()) {

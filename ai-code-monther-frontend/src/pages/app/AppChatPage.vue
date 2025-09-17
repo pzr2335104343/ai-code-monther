@@ -6,6 +6,12 @@
         <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
       </div>
       <div class="header-right">
+        <a-button type="default" @click="router.push('/app/history/' + appInfo?.codeGenType+'_'+appInfo?.id)">
+          <template #icon>
+            <InfoCircleOutlined />
+          </template>
+          查看历史
+        </a-button>
         <a-button type="default" @click="showAppDetail">
           <template #icon>
             <InfoCircleOutlined />
@@ -224,6 +230,7 @@ const fetchAppInfo = async () => {
   try {
     const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
+      debugger
       appInfo.value = res.data.data
       // 检查是否有view=1参数，如果有则不自动发送初始提示词
       const isViewMode = route.query.view === '1'
@@ -396,7 +403,7 @@ const handleError = (error: unknown, aiMessageIndex: number) => {
 const updatePreview = () => {
   if (appId.value) {
     const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
-    previewUrl.value = getStaticPreviewUrl(codeGenType, appId.value)
+    previewUrl.value = getStaticPreviewUrl(codeGenType, appId.value,appInfo.value?.appVersion as number)
     previewReady.value = true
   }
 }
@@ -451,7 +458,67 @@ const openDeployedSite = () => {
 }
 
 // iframe加载完成
-const onIframeLoad = () => {
+const onIframeLoad = () => {codeList: () => [
+  {
+    type: 'group',
+    label: 'Default Group',
+    children: [
+      {
+        label: 'Default Option',
+        key: 'default:1'
+      }
+    ]
+  }
+]
+codeList: () => [
+  {
+    type: 'group',
+    label: 'Default Group',
+    children: [
+      {
+        label: 'Default Option',
+        key: 'default:1'
+      }
+    ]
+  }
+]
+codeList: () => [
+  {
+    type: 'group',
+    label: 'Default Group',
+    children: [
+      {
+        label: 'Default Option',
+        key: 'default:1'
+      }
+    ]
+  }
+]
+codeList: () => [
+  {
+    type: 'group',
+    label: 'Default Group',
+    children: [
+      {
+        label: 'Default Option',
+        key: 'default:1'
+      }
+    ]
+  }
+]
+codeList: () => [
+  {
+    type: 'group',
+    label: 'Default Group',
+    children: [
+      {
+        label: 'Default Option',
+        key: 'default:1'
+      }
+    ]
+  }
+]
+
   previewReady.value = true
 }
 

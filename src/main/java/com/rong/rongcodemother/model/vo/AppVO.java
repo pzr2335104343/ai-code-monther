@@ -32,7 +32,7 @@ public class AppVO implements Serializable {
     /**
      * 应用版本
      */
-    private int appVersion;
+    private Short appVersion;
 
     /**
      * 代码生成类型（枚举）
