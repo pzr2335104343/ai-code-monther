@@ -7,13 +7,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/static")
@@ -34,13 +33,17 @@ public class StaticResourceController {
         try {
             // 获取资源路径
             String resourcePath = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-            // 如果是目录访问（不带斜杠），重定向到带斜杠的URL
-            if (resourcePath.endsWith("/")) {
-                resourcePath = "/index.html";
-            }else {
+
+            resourcePath = resourcePath.substring(("/static/"+deployKey+'/'+appVersion).length());
+            // 如果是目录访问（不带斜杠），重定向到带斜杠的URL **/v1
+            if(resourcePath.isEmpty()){
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Location", request.getRequestURI() + "/");
                 return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
+            }
+            // 如果是目录访问（带斜杠），重定向到index.html **/v1/
+            if (resourcePath.endsWith("/")) {
+                resourcePath = "/index.html";
             }
             // 构建文件路径
             String filePath = String.format("%s/%s/%s/%s",PREVIEW_ROOT_DIR,deployKey,appVersion,resourcePath);
@@ -57,6 +60,40 @@ public class StaticResourceController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * 提供目录下所有文件名
+     * @param deployKey 应用目录
+     */
+    @GetMapping("/list")
+    public ResponseEntity<List<String>> listDirectoryNames(@RequestParam String deployKey,HttpServletRequest request){
+        try {
+            // 拼接目标目录（基础目录 + 子目录）
+            String fileDirPath = PREVIEW_ROOT_DIR + File.separator + deployKey;
+            File fileDir = new File(fileDirPath);
+            // 校验目录有效性
+            if (!fileDir.exists() || !fileDir.isDirectory()) {
+                throw new IllegalArgumentException("目录不存在或不是有效目录");
+            }
+            // 获取目录名称
+            List<String> pathList = getFileNames(fileDir, fileDir.getName());
+            return ResponseEntity.ok(pathList) ;
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    private List<String> getFileNames(File fileDir,String parentPath){
+        parentPath+="/";
+        List<String> pathList = new ArrayList<>();
+        for(File file:fileDir.listFiles()){
+            pathList.add(parentPath+file.getName());
+            if(file.isDirectory()){
+                pathList.addAll(getFileNames(file,parentPath+file.getName()));
+            }
+        }
+        return pathList;
     }
 
     /**

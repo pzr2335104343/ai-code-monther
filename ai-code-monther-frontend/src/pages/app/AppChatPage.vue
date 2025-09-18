@@ -230,7 +230,6 @@ const fetchAppInfo = async () => {
   try {
     const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
-      debugger
       appInfo.value = res.data.data
       // 检查是否有view=1参数，如果有则不自动发送初始提示词
       const isViewMode = route.query.view === '1'
@@ -458,67 +457,7 @@ const openDeployedSite = () => {
 }
 
 // iframe加载完成
-const onIframeLoad = () => {codeList: () => [
-  {
-    type: 'group',
-    label: 'Default Group',
-    children: [
-      {
-        label: 'Default Option',
-        key: 'default:1'
-      }
-    ]
-  }
-]
-codeList: () => [
-  {
-    type: 'group',
-    label: 'Default Group',
-    children: [
-      {
-        label: 'Default Option',
-        key: 'default:1'
-      }
-    ]
-  }
-]
-codeList: () => [
-  {
-    type: 'group',
-    label: 'Default Group',
-    children: [
-      {
-        label: 'Default Option',
-        key: 'default:1'
-      }
-    ]
-  }
-]
-codeList: () => [
-  {
-    type: 'group',
-    label: 'Default Group',
-    children: [
-      {
-        label: 'Default Option',
-        key: 'default:1'
-      }
-    ]
-  }
-]
-codeList: () => [
-  {
-    type: 'group',
-    label: 'Default Group',
-    children: [
-      {
-        label: 'Default Option',
-        key: 'default:1'
-      }
-    ]
-  }
-]
-
+const onIframeLoad = () => {
   previewReady.value = true
 }
 

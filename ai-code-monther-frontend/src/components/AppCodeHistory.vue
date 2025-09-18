@@ -27,11 +27,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref,h  } from 'vue'
+import { ref, h, onMounted } from 'vue'
 import { CodeDiff } from 'v-code-diff'
-import {  SettingOutlined } from '@ant-design/icons-vue'
-import { serveStaticResource } from '@/api/staticResourceController.js'
-import { MenuProps, message } from 'ant-design-vue'
+import { SettingOutlined } from '@ant-design/icons-vue'
+import { listDirectoryNames, serveStaticResource } from '@/api/staticResourceController.js'
+import { type MenuProps, message } from 'ant-design-vue'
 import { useRoute } from 'vue-router'
 
 let oldString = ref('12233')
@@ -44,56 +44,60 @@ const itemsLeft = ref<MenuProps['items']>([
     icon: () => h(SettingOutlined),
     label: '左侧数据',
     title: '左侧数据',
-    children: [
-      {
-        type: 'group',
-        label: 'v1',
-        children: [
-          {
-            label: 'index.html',
-            key: 'v1/index.html',
-          },
-          {
-            label: 'style.css',
-            key: 'v1/style.css',
-          },
-        ],
-      }
-    ],
-  },
+    children: []
+  }
 ])
 const itemsRight = ref<MenuProps['items']>([
   {
-    key: 'sub1',
+    key: 'sub2',
     icon: () => h(SettingOutlined),
     label: '右侧数据',
     title: '右侧数据',
-    children: [
-      {
-        type: 'group',
-        label: 'v1',
-        children: [
-          {
-            label: 'index.html',
-            key: 'v1/index.html',
-          },
-          {
-            label: 'style.css',
-            key: 'v1/style.css',
-          },
-        ],
-      }
-    ],
-  },
+    children: []
+  }
 ])
 
+
+onMounted(async () => {
+  const res = await listDirectoryNames({ deployKey: route.params.deployKey as string })
+  if (res.status === 200 && res.data) {
+    let tempObj = {};
+    res.data.map(item => item.split('/')).forEach(item => {
+      if(item.length<=2){
+        tempObj[item[1]] = []
+      }else{
+        let obj={}
+        tempObj[item[1]].push(
+          {
+            "key":item[1]+'/'+item[2],
+            "label":item[2],
+          })
+      }
+    })
+    Object.keys(tempObj).forEach(item => {
+      itemsLeft.value[0].children.push({
+        type: 'group',
+        label: item,
+        children: tempObj[item]
+      })
+      itemsRight.value[0].children.push({
+        type: 'group',
+        label: item,
+        children: tempObj[item]
+      })
+    })
+  } else {
+    message.error('获取应用版本列表失败')
+  }
+})
+
 // 处理左侧文件选择事件
-function handleLeftFileSelect(item) {
+function handleLeftFileSelect(item: any) {
   getFile('left', item.selectedKeys[0])
 }
 
 // 处理右侧文件选择事件
-function handleRightFileSelect(item) {
+function handleRightFileSelect(item: any) {
   getFile('right', item.selectedKeys[0])
 }
 

@@ -138,6 +138,10 @@ declare namespace API {
     id: number
   }
 
+  type listDirectoryNamesParams = {
+    deployKey: string
+  }
+
   type LoginUserVO = {
     id?: number
     userAccount?: string
