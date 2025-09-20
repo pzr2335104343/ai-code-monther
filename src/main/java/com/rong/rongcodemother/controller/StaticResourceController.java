@@ -1,4 +1,4 @@
-package com.yupi.yuaicodemother.controller;
+package com.rong.rongcodemother.controller;
 
 import com.rong.rongcodemother.constant.AppConstant;
 import jakarta.servlet.http.HttpServletRequest;
