@@ -1,4 +1,4 @@
-package com.rong.rongcodemother.controller;
+package com.yupi.yuaicodemother.controller;
 
 import com.rong.rongcodemother.constant.AppConstant;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,9 +11,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.File;
 
+/**
+ * 静态资源访问
+ */
 @RestController
 @RequestMapping("/static")
 public class StaticResourceController {
@@ -31,14 +35,17 @@ public class StaticResourceController {
             HttpServletRequest request) {
         try {
             // 获取资源路径
-            String resourcePath = request.getRequestURI();
+            String resourcePath = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+            resourcePath = resourcePath.substring(("/static/" + deployKey).length());
             // 如果是目录访问（不带斜杠），重定向到带斜杠的URL
-            if (resourcePath.endsWith("/")) {
-                resourcePath = "/index.html";
-            }else {
+            if (resourcePath.isEmpty()) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Location", request.getRequestURI() + "/");
                 return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
+            }
+            // 默认返回 index.html
+            if (resourcePath.equals("/")) {
+                resourcePath = "/index.html";
             }
             // 构建文件路径
             String filePath = PREVIEW_ROOT_DIR + "/" + deployKey + resourcePath;
