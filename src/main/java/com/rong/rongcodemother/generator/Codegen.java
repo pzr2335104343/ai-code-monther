@@ -10,8 +10,8 @@ import java.util.Map;
 
 public class Codegen {
 
-    private static final String BASE_PACKAGE = "com.rong.rongaicodemonther.generatorResult";
-    private static final String[] TABLE_NAMES = {"app"};
+    private static final String BASE_PACKAGE = "com.rong.rongcodemother.generatorResult";
+    private static final String[] TABLE_NAMES = {"chat_history"};
 
     public static void main(String[] args) {
         Dict dict = YamlUtil.loadByPath("application-local.yml");

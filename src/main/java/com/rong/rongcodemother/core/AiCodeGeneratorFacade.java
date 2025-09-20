@@ -3,6 +3,7 @@ package com.rong.rongcodemother.core;
 import com.rong.rongcodemother.ai.AiCodeGeneratorService;
 import com.rong.rongcodemother.ai.model.HtmlCodeResult;
 import com.rong.rongcodemother.ai.model.MultiFileCodeResult;
+import com.rong.rongcodemother.core.parser.CodeParserExecutor;
 import com.rong.rongcodemother.core.saver.CodeFIleSaverExecutor;
 import com.rong.rongcodemother.exception.BusinessException;
 import com.rong.rongcodemother.exception.ErrorCode;
@@ -89,12 +90,12 @@ public class AiCodeGeneratorFacade {
      * @return 处理后的代码流
      */
     private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType,Long appId) {
-
         StringBuilder completeCode = new StringBuilder();
         return codeStream.doOnNext(completeCode::append).doOnComplete(() -> {
             try {
                 // 根据类型解析并保存代码
-                File file = generateAndSaveCode(completeCode.toString(), codeGenType, appId);
+                Object object = CodeParserExecutor.executeParser(completeCode.toString(), codeGenType);
+                File file = CodeFIleSaverExecutor.executeSaver(object,codeGenType,appId);
                 log.info("保存的文件路径为：{}", file.getAbsolutePath());
             } catch (Exception e) {
                 log.error("生成代码失败", e);
