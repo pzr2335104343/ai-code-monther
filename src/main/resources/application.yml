@@ -9,6 +9,13 @@ spring:
     url: jdbc:mysql://x.x.x.x:xxxx/rong_ai_code_monther
     username: xxx
     password: xxx
+  # redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      ttl: 3600
 server:
   port: 8123
   servlet:
