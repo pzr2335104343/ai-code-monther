@@ -3,6 +3,9 @@ spring:
     active: local
   application:
     name: rong-ai-code-monther-backend
+  session:
+    store-type: redis
+    timeout: 2592000
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -20,6 +23,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    # cookie 30天过期
+    session:
+      cookie:
+        max-age: 2592000
 # springdoc-openapi
 springdoc:
   group-configs:
