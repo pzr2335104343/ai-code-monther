@@ -76,6 +76,15 @@ public class JsonMessageStreamHandler {
         StreamMessage streamMessage = JSONUtil.toBean(chunk, StreamMessage.class);
         StreamMessageTypeEnum typeEnum = StreamMessageTypeEnum.getEnumByValue(streamMessage.getType());
         switch (typeEnum) {
+            case AI_THINKING -> {
+                AiThinkingMessage aiThinkingMessage = JSONUtil.toBean(chunk, AiThinkingMessage.class);
+                String data = aiThinkingMessage.getData();
+                // XML包裹思考块
+                data= String.format("<ai-thinking>%s</ai-thinking>", data);
+                // 直接拼接响应
+                chatHistoryStringBuilder.append(data);
+                return data;
+            }
             case AI_RESPONSE -> {
                 AiResponseMessage aiMessage = JSONUtil.toBean(chunk, AiResponseMessage.class);
                 String data = aiMessage.getData();

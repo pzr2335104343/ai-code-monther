@@ -6,8 +6,8 @@ import com.rong.rongcodemother.ai.AiCodeGeneratorServiceFactory;
 import com.rong.rongcodemother.ai.model.HtmlCodeResult;
 import com.rong.rongcodemother.ai.model.MultiFileCodeResult;
 import com.rong.rongcodemother.ai.model.message.AiResponseMessage;
+import com.rong.rongcodemother.ai.model.message.AiThinkingMessage;
 import com.rong.rongcodemother.ai.model.message.ToolExecutedMessage;
-import com.rong.rongcodemother.ai.model.message.ToolRequestMessage;
 import com.rong.rongcodemother.core.parser.CodeParserExecutor;
 import com.rong.rongcodemother.core.saver.CodeFIleSaverExecutor;
 import com.rong.rongcodemother.exception.BusinessException;
@@ -109,10 +109,15 @@ public class AiCodeGeneratorFacade {
                         AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
                         sink.next(JSONUtil.toJsonStr(aiResponseMessage));
                     })
-                    .onPartialToolExecutionRequest((index, toolExecutionRequest) -> {
-                        ToolRequestMessage toolRequestMessage = new ToolRequestMessage(toolExecutionRequest);
-                        sink.next(JSONUtil.toJsonStr(toolRequestMessage));
+                    .onPartialThinking((partialThinking) -> {
+                        System.out.println("partialThinking: " + partialThinking.text());
+                        AiThinkingMessage aiThinkingMessage = new AiThinkingMessage(partialThinking.text());
+                        sink.next(JSONUtil.toJsonStr(aiThinkingMessage));
                     })
+//                    .onPartialToolExecutionRequest((index, toolExecutionRequest) -> {
+//                        ToolRequestMessage toolRequestMessage = new ToolRequestMessage(toolExecutionRequest);
+//                        sink.next(JSONUtil.toJsonStr(toolRequestMessage));
+//                    })
                     .onToolExecuted((ToolExecution toolExecution) -> {
                         ToolExecutedMessage toolExecutedMessage = new ToolExecutedMessage(toolExecution);
                         sink.next(JSONUtil.toJsonStr(toolExecutedMessage));

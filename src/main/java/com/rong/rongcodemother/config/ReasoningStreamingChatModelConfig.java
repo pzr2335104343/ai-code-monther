@@ -1,5 +1,6 @@
 package com.rong.rongcodemother.config;
 
+import cn.hutool.ai.model.deepseek.DeepSeekProvider;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import lombok.Data;
@@ -32,6 +33,7 @@ public class ReasoningStreamingChatModelConfig {
                 .baseUrl(baseUrl)
                 .modelName(modelName)
                 .maxTokens(maxTokens)
+                .returnThinking(true)
                 .logRequests(true)
                 .logResponses(true)
                 .build();
