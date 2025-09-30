@@ -6,6 +6,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.qcloud.cos.exception.CosServiceException;
 import com.rong.rongcodemother.constant.AppConstant;
 import com.rong.rongcodemother.core.AiCodeGeneratorFacade;
 import com.rong.rongcodemother.core.builder.VueProjectBuilder;
@@ -23,6 +24,7 @@ import com.rong.rongcodemother.model.vo.AppVO;
 import com.rong.rongcodemother.model.vo.UserVO;
 import com.rong.rongcodemother.service.AppService;
 import com.rong.rongcodemother.service.ChatHistoryService;
+import com.rong.rongcodemother.service.ScreenshotService;
 import com.rong.rongcodemother.service.UserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +63,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     @Resource
     private VueProjectBuilder vueProjectBuilder;
 
+    @Resource
+    private ScreenshotService screenshotService;
+
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, User loginUser) {
         // 1.参数校验
@@ -84,7 +89,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
         // 6. 调用 AI 生成代码（流式）
         Flux<String> contentStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenType, appId);
-        return streamHandlerExecutor.doExecute(contentStream,chatHistoryService, appId, loginUser,codeGenType);
+        return streamHandlerExecutor.doExecute(contentStream, chatHistoryService, appId, loginUser, codeGenType);
     }
 
 
@@ -117,12 +122,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "应用不存在，请先生成");
         }
         // 7.Vue 项目dist目录
-        CodeGenTypeEnum codeGenTypeEnum= CodeGenTypeEnum.getEnumByValue(codeGenType);
-        if(codeGenTypeEnum==CodeGenTypeEnum.VUE_PROJECT){
+        CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenType);
+        if (codeGenTypeEnum == CodeGenTypeEnum.VUE_PROJECT) {
             boolean buildSuccess = vueProjectBuilder.buildProject(sourceDirPath);
             ThrowUtils.throwIf(!buildSuccess, ErrorCode.SYSTEM_ERROR, "构建 Vue 项目失败");
             // 检查是否有 dist目录
-            File distDir = new File(sourceDirPath,"dist");
+            File distDir = new File(sourceDirPath, "dist");
             ThrowUtils.throwIf(!distDir.exists(), ErrorCode.SYSTEM_ERROR, "构建 Vue 项目成功但未生成dist目录");
             sourceDir = distDir;
         }
@@ -143,8 +148,35 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新部署应用信息失败");
         // 10.返回部署地址
-        return String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
+        String appDeployUrl = String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
+        // 11.异步生成截图并且更新应用封面
+        generateAppScreenshotAsync (appId, appDeployUrl);
+
+        return appDeployUrl;
     }
+
+    /**
+     * 异步生成应用截图并更新应用封面
+     * @param appId 应用ID
+     * @param appUrl 应用访问地址
+     */
+    @Override
+    public void generateAppScreenshotAsync(Long appId, String appUrl) {
+        // 使用虚拟线程并且执行
+        Thread.startVirtualThread(() -> {
+            // 调用截图服务生成截图并上传
+            String coverUrl = screenshotService.generateAndUploadScreenshot(appUrl);
+            // 更新应用封面
+            App updateApp = new App();
+            updateApp.setId(appId);
+            updateApp.setCover(coverUrl);
+            boolean result = this.updateById(updateApp);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新应用封面失败");
+        });
+
+
+    }
+
 
     @Override
     public QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest) {
