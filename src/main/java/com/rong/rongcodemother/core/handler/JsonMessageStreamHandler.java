@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,7 +58,7 @@ public class JsonMessageStreamHandler {
                     String aiResponse = chatHistoryStringBuilder.toString();
                     chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
                     // 异步构建 Vue 项目
-                    String projectPath =AppConstant.CODE_OUTPUT_ROOT_DIR +FileUtil.PATH_SEPARATOR + "vue_project_" + appId;
+                    String projectPath =AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + "vue_project_" + appId;
                     vueProjectBuilder.buildProjectAsync(projectPath);
 
                 })
