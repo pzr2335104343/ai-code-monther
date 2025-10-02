@@ -1,12 +1,13 @@
 package com.rong.rongcodemother.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import com.qcloud.cos.exception.CosServiceException;
+import com.rong.rongcodemother.ai.AiCodeGenTypeRoutingService;
 import com.rong.rongcodemother.constant.AppConstant;
 import com.rong.rongcodemother.core.AiCodeGeneratorFacade;
 import com.rong.rongcodemother.core.builder.VueProjectBuilder;
@@ -14,6 +15,7 @@ import com.rong.rongcodemother.core.handler.StreamHandlerExecutor;
 import com.rong.rongcodemother.exception.BusinessException;
 import com.rong.rongcodemother.exception.ErrorCode;
 import com.rong.rongcodemother.exception.ThrowUtils;
+import com.rong.rongcodemother.model.dto.app.AppAddRequest;
 import com.rong.rongcodemother.model.dto.app.AppQueryRequest;
 import com.rong.rongcodemother.model.entity.App;
 import com.rong.rongcodemother.mapper.AppMapper;
@@ -65,6 +67,36 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private ScreenshotService screenshotService;
+
+    @Resource
+    private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+
+    /**
+     * 创建应用
+     * @param appAddRequest 创建参数
+     * @param loginUser 登录用户
+     * @return 应用ID
+     */
+    @Override
+    public Long createApp(AppAddRequest appAddRequest, User loginUser) {
+
+        // 参数校验
+        String initPrompt = appAddRequest.getInitPrompt();
+        ThrowUtils.throwIf(StrUtil.isBlank(initPrompt), ErrorCode.PARAMS_ERROR, "初始化 prompt 不能为空");
+        // 构造入库对象
+        App app = new App();
+        BeanUtil.copyProperties(appAddRequest, app);
+        app.setUserId(loginUser.getId());
+        // 应用名称暂时为 initPrompt 前 12 位
+        app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
+        // 智能路由代码模式
+        CodeGenTypeEnum codeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
+        app.setCodeGenType(codeGenType.getValue());
+        // 插入数据库
+        boolean result = this.save(app);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return app.getId();
+    }
 
     @Override
     public Flux<String> chatToGenCode(Long appId, String message, User loginUser) {
@@ -150,7 +182,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 10.返回部署地址
         String appDeployUrl = String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
         // 11.异步生成截图并且更新应用封面
-        generateAppScreenshotAsync (appId, appDeployUrl);
+        generateAppScreenshotAsync(appId, appDeployUrl);
 
         return appDeployUrl;
     }

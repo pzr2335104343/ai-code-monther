@@ -2,6 +2,7 @@ package com.rong.rongcodemother.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
+import com.rong.rongcodemother.model.dto.app.AppAddRequest;
 import com.rong.rongcodemother.model.dto.app.AppQueryRequest;
 import com.rong.rongcodemother.model.entity.App;
 import com.rong.rongcodemother.model.entity.User;
@@ -14,6 +15,15 @@ import java.util.List;
  *  服务层。
  */
 public interface AppService extends IService<App> {
+
+
+    /**
+     * 创建应用
+     * @param appAddRequest 创建参数
+     * @param loginUser 登录用户
+     * @return 应用ID
+     */
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 
     /**
      *
