@@ -16,6 +16,7 @@ public class SpringContextUtil implements ApplicationContextAware {
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        // 将Spring上下文注入到工具类中，以便在整个应用程序中访问Spring容器
         SpringContextUtil.applicationContext = applicationContext;
     }
 

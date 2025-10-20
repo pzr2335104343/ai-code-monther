@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.rong.rongcodemother.ai.AiCodeGenTypeRoutingService;
+import com.rong.rongcodemother.ai.AiCodeGenTypeRoutingServiceFactory;
 import com.rong.rongcodemother.constant.AppConstant;
 import com.rong.rongcodemother.core.AiCodeGeneratorFacade;
 import com.rong.rongcodemother.core.builder.VueProjectBuilder;
@@ -69,7 +70,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private ScreenshotService screenshotService;
 
     @Resource
-    private AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService;
+    private AiCodeGenTypeRoutingServiceFactory aiCodeGenTypeRoutingServiceFactory;
 
     /**
      * 创建应用
@@ -89,7 +90,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         app.setUserId(loginUser.getId());
         // 应用名称暂时为 initPrompt 前 12 位
         app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
-        // 智能路由代码模式
+        // 使用AI智能路由选择代码生成类型（多例模式）
+        AiCodeGenTypeRoutingService aiCodeGenTypeRoutingService = aiCodeGenTypeRoutingServiceFactory.createAiCodeGenTypeRoutingService();
         CodeGenTypeEnum codeGenType = aiCodeGenTypeRoutingService.routeCodeGenType(initPrompt);
         app.setCodeGenType(codeGenType.getValue());
         // 插入数据库
