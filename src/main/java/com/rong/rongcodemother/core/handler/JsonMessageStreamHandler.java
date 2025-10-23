@@ -1,14 +1,11 @@
 package com.rong.rongcodemother.core.handler;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.rong.rongcodemother.ai.model.message.*;
 import com.rong.rongcodemother.ai.tools.BaseTool;
 import com.rong.rongcodemother.ai.tools.ToolManager;
-import com.rong.rongcodemother.constant.AppConstant;
-import com.rong.rongcodemother.core.builder.VueProjectBuilder;
 import com.rong.rongcodemother.model.entity.User;
 import com.rong.rongcodemother.model.enums.ChatHistoryMessageTypeEnum;
 import com.rong.rongcodemother.service.ChatHistoryService;
@@ -28,9 +25,6 @@ import java.util.Set;
 @Slf4j
 @Component
 public class JsonMessageStreamHandler {
-
-    @Resource
-    private VueProjectBuilder vueProjectBuilder;
 
     @Resource
     private ToolManager toolManager;
@@ -62,9 +56,6 @@ public class JsonMessageStreamHandler {
                     // 流式响应完成后，添加 AI 消息到对话历史
                     String aiResponse = chatHistoryStringBuilder.toString();
                     chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-                    // 异步构建 Vue 项目
-                    String projectPath =AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + "vue_project_" + appId;
-                    vueProjectBuilder.buildProjectAsync(projectPath);
 
                 })
                 .doOnError(error -> {
