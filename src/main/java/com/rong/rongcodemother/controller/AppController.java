@@ -17,6 +17,8 @@ import com.rong.rongcodemother.exception.ThrowUtils;
 import com.rong.rongcodemother.model.dto.app.*;
 import com.rong.rongcodemother.model.entity.User;
 import com.rong.rongcodemother.model.vo.AppVO;
+import com.rong.rongcodemother.ratelimter.config.RateLimit;
+import com.rong.rongcodemother.ratelimter.enums.RateLimitType;
 import com.rong.rongcodemother.service.ProjectDownloadService;
 import com.rong.rongcodemother.service.UserService;
 import jakarta.annotation.Resource;
@@ -62,6 +64,7 @@ public class AppController {
      * @return AI响应流
      */
     @GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @RateLimit(key="",rate=2,rateInterval = 60,limitType = RateLimitType.USER,message = "您的操作过于频繁，请稍后再试")
     public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
                                                        @RequestParam String message,
                                                        HttpServletRequest request) {
