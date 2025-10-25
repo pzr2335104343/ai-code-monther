@@ -2,6 +2,7 @@ package com.rong.rongcodemother.ai;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.rong.rongcodemother.ai.guardrail.PromptSafetyInputGuardrail;
 import com.rong.rongcodemother.ai.tools.*;
 import com.rong.rongcodemother.exception.BusinessException;
 import com.rong.rongcodemother.exception.ErrorCode;
@@ -71,10 +72,10 @@ public class AiCodeGeneratorServiceFactory {
 
     /**
      * 创建新的 AI 服务实例
-     * @param appId 应用 ID
+     *
+     * @param appId       应用 ID
      * @param codeGenType 代码生成模式
      * @return AI 服务实例
-     *
      */
     private AiCodeGeneratorService createAiCodeGeneratorService(long appId, CodeGenTypeEnum codeGenType) {
         // 根据 appId 构建独立的对话记忆
@@ -93,23 +94,28 @@ public class AiCodeGeneratorServiceFactory {
                 // 使用原型模式的 StreamingChatModel 解决并发问题
                 StreamingChatModel reasoningStreamingChatModel = SpringContextUtil.getBean("reasoningStreamingChatModelPrototype", StreamingChatModel.class);
                 yield AiServices.builder(AiCodeGeneratorService.class)
-                    .streamingChatModel(reasoningStreamingChatModel)
-                    .chatMemoryProvider(memoryId -> chatMemory)
-                    .tools(toolManager.getAllTools())
-                    .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
-                            toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
-                    ))
-                    .build();
+                        .streamingChatModel(reasoningStreamingChatModel)
+                        .chatMemoryProvider(memoryId -> chatMemory)
+                        .tools(toolManager.getAllTools())
+                        .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
+                                toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
+                        ))
+                        .maxSequentialToolsInvocations(20) // 最多连续调用20次工具
+                        .inputGuardrails(new PromptSafetyInputGuardrail())
+//                        .outputGuardrails(new RetryOutputGuardrail()) 为了能够流式输出，不使用输出护轨
+                        .build();
             }
             // HTML 和多文件生成使用默认模型
             case HTML, MULTI_FILE -> {
                 // 使用原型模式的 StreamingChatModel 解决并发问题
                 StreamingChatModel openAiStreamingChatModel = SpringContextUtil.getBean("streamingChatModelPrototype", StreamingChatModel.class);
                 yield AiServices.builder(AiCodeGeneratorService.class)
-                    .chatModel(chatModel)
-                    .streamingChatModel(openAiStreamingChatModel)
-                    .chatMemory(chatMemory)
-                    .build();
+                        .chatModel(chatModel)
+                        .streamingChatModel(openAiStreamingChatModel)
+                        .chatMemory(chatMemory)
+                        .inputGuardrails(new PromptSafetyInputGuardrail())
+//                        .outputGuardrails(new RetryOutputGuardrail())
+                        .build();
             }
             default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR,
                     "不支持的代码生成类型: " + codeGenType.getValue());
