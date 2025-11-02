@@ -85,3 +85,11 @@ cos:
 # Pexels 图片搜索配置
 pexels:
   api-key: <Your API Key>
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always

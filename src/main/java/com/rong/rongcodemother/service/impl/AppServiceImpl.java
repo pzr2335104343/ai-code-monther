@@ -25,6 +25,8 @@ import com.rong.rongcodemother.model.enums.ChatHistoryMessageTypeEnum;
 import com.rong.rongcodemother.model.enums.CodeGenTypeEnum;
 import com.rong.rongcodemother.model.vo.AppVO;
 import com.rong.rongcodemother.model.vo.UserVO;
+import com.rong.rongcodemother.monitor.MonitorContext;
+import com.rong.rongcodemother.monitor.MonitorContextHolder;
 import com.rong.rongcodemother.service.AppService;
 import com.rong.rongcodemother.service.ChatHistoryService;
 import com.rong.rongcodemother.service.ScreenshotService;
@@ -74,8 +76,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     /**
      * 创建应用
+     *
      * @param appAddRequest 创建参数
-     * @param loginUser 登录用户
+     * @param loginUser     登录用户
      * @return 应用ID
      */
     @Override
@@ -121,9 +124,22 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
         // 5. 通过校验后，添加用户消息到对话历史
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
-        // 6. 调用 AI 生成代码（流式）
-        Flux<String> contentStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenType, appId);
-        return streamHandlerExecutor.doExecute(contentStream, chatHistoryService, appId, loginUser, codeGenType);
+        // 6. 设置监控上下文
+        MonitorContextHolder.setContext(
+                MonitorContext.builder()
+                        .userId(loginUser.getId().toString())
+                        .appId(appId.toString())
+                        .build()
+        );
+        // 7. 调用 AI 生成代码（流式）
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenType, appId);
+        // 8. 收集 AI 响应内容并在完成后记录到对话历史
+        return streamHandlerExecutor.doExecute(codeStream, chatHistoryService, appId, loginUser, codeGenType)
+                .doFinally(signalType -> {
+                    // 流结束时清理（无论成功/失败/取消）
+                    MonitorContextHolder.clearContext();
+                });
+
     }
 
 
@@ -191,7 +207,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     /**
      * 异步生成应用截图并更新应用封面
-     * @param appId 应用ID
+     *
+     * @param appId  应用ID
      * @param appUrl 应用访问地址
      */
     @Override
