@@ -128,5 +128,5 @@ export const generatePreviewUrl = (
   appId: number | undefined,
 ): string => {
   if (!codeGenType || !appId) return ''
-  return `http://localhost:8123/api/static/${codeGenType}_${appId}/`
+  return `http://pangzerong.cn/api/static/${codeGenType}_${appId}/`
 }
