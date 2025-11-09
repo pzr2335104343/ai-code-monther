@@ -9,7 +9,7 @@ spring:
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://x.x.x.x:xxxx/rong_ai_code_monther
+    url: jdbc:mysql://x.x.x.x:xxxx/rong_ai_code_mother
     username: xxx
     password: xxx
   # redis

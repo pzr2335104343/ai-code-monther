@@ -34,6 +34,7 @@ import com.rong.rongcodemother.service.UserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -52,6 +53,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppService {
+
+    @Value("${code.deploy-host:http://localhost}")
+    private String codeDeployHost;
 
     @Resource
     private UserService userService;
@@ -198,7 +202,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新部署应用信息失败");
         // 10.返回部署地址
-        String appDeployUrl = String.format("%s/%s", AppConstant.CODE_DEPLOY_HOST, deployKey);
+        String appDeployUrl = String.format("%s/%s", codeDeployHost, deployKey);
         // 11.异步生成截图并且更新应用封面
         generateAppScreenshotAsync(appId, appDeployUrl);
 
