@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://pangzerong.cn/',
+        target: 'http://localhost:8123',
         changeOrigin: true,
         secure: false,
       },

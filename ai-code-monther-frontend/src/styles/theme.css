@@ -1,0 +1,97 @@
+/* 高端柔和主题变量（可统一调整） */
+:root {
+  --brand-primary: #6b8cff;           /* 温和蓝紫主色 */
+  --brand-primary-hover: #5e7bff;
+  --brand-primary-active: #4f69f5;
+  --bg-page-start: #f6f7fb;           /* 柔和浅灰蓝背景 */
+  --bg-page-end: #eef1f7;
+  --bg-container: #ffffff;
+  --text-color: #1f2430;
+  --text-secondary: #5b6474;
+  --border-radius-lg: 14px;           /* 偏圆润 */
+  --border-radius-md: 12px;
+  --border-radius-sm: 10px;
+  --elev-shadow: 0 6px 24px rgba(32, 54, 93, 0.08), 0 2px 8px rgba(32, 54, 93, 0.06);
+  --elev-shadow-hover: 0 10px 30px rgba(32, 54, 93, 0.12), 0 4px 12px rgba(32, 54, 93, 0.08);
+  --transition-fast: 150ms;
+  --transition-mid: 220ms;
+  --transition-slow: 360ms;
+}
+
+/* 页面背景与基础排版 */
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  color: var(--text-color);
+  background: linear-gradient(135deg, var(--bg-page-start), var(--bg-page-end));
+}
+
+/* 细腻动效：默认过渡 */
+* {
+  transition: background-color var(--transition-mid) ease,
+              color var(--transition-mid) ease,
+              border-color var(--transition-mid) ease,
+              box-shadow var(--transition-mid) ease,
+              transform var(--transition-fast) ease;
+}
+
+/* 统一圆角与容器风格 */
+.soft-surface {
+  background: var(--bg-container);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--elev-shadow);
+}
+.soft-surface:hover {
+  box-shadow: var(--elev-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Ant Design 组件基础微调（基于类名，不破坏 Token） */
+.ant-card,
+.ant-modal-content,
+.ant-drawer-body,
+.ant-dropdown,
+.ant-popover {
+  border-radius: var(--border-radius-lg);
+}
+
+.ant-btn {
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+.ant-btn:not(.ant-btn-link):not(.ant-btn-text):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--elev-shadow);
+}
+.ant-btn-primary {
+  background: var(--brand-primary);
+}
+.ant-btn-primary:hover {
+  background: var(--brand-primary-hover);
+}
+.ant-btn-primary:active {
+  background: var(--brand-primary-active);
+}
+
+/* 表单与输入的圆润风格 */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-picker {
+  border-radius: var(--border-radius-md) !important;
+}
+
+/* 动效：入场淡入上移 */
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: opacity var(--transition-slow) ease, transform var(--transition-slow) ease;
+}
+.fade-up-enter-from,
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+

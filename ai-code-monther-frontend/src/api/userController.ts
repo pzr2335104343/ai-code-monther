@@ -1,4 +1,3 @@
-// @ts-ignore
 /* eslint-disable */
 import request from '@/request'
 
@@ -9,6 +8,15 @@ export async function addUser(body: API.UserAddRequest, options?: { [key: string
     headers: {
       'Content-Type': 'application/json',
     },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** 此处后端没有提供注释 POST /user/avatar/upload */
+export async function uploadAvatar(body: FormData, options?: { [key: string]: any }) {
+  return request<API.BaseResponseString>('/user/avatar/upload', {
+    method: 'POST',
     data: body,
     ...(options || {}),
   })

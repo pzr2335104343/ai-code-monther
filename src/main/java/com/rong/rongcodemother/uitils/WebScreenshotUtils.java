@@ -139,9 +139,9 @@ public class WebScreenshotUtils {
     private static WebDriver initChromeDriver(int width, int height) {
         try {
             // 自动管理 ChromeDriver
-//            WebDriverManager.chromedriver().setup();
+            WebDriverManager.chromedriver().setup();
             // 直接指定本地 chromedriver 路径
-            System.setProperty("webdriver.chrome.driver", CHROMEDRIVER_PATH);
+//            System.setProperty("webdriver.chrome.driver", CHROMEDRIVER_PATH);
             // 配置 Chrome 选项
             ChromeOptions options = new ChromeOptions();
             // 无头模式

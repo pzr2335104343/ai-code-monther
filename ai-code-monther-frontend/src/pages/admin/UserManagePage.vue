@@ -19,6 +19,7 @@
       :data-source="data"
       :pagination="pagination"
       @change="doTableChange"
+      :height="520"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'userAvatar'">
@@ -160,6 +161,6 @@ const doDelete = async (id: number) => {
 #userManagePage {
   padding: 24px;
   background: white;
-  margin-top: 16px;
+  margin-top: 0;
 }
 </style>

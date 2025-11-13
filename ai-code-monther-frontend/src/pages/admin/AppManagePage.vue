@@ -1,5 +1,5 @@
 <template>
-  <div id="appManagePage">
+  <div id="appManagePage" ref="pageRef">
     <!-- 搜索表单 -->
     <a-form layout="inline" :model="searchParams" @finish="doSearch">
       <a-form-item label="应用名称">
@@ -36,7 +36,7 @@
       :data-source="data"
       :pagination="pagination"
       @change="doTableChange"
-      :scroll="{ x: 1200 }"
+      :scroll="{ x: 1200, y: tableHeight }"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'cover'">
@@ -89,7 +89,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { listAppVoByPageByAdmin, deleteAppByAdmin, updateAppByAdmin } from '@/api/appController'
@@ -157,6 +157,15 @@ const columns = [
 // 数据
 const data = ref<API.AppVO[]>([])
 const total = ref(0)
+const pageRef = ref<HTMLElement | null>(null)
+const tableHeight = ref<number>(520)
+
+const updateTableHeight = () => {
+  const top = pageRef.value?.getBoundingClientRect().top ?? 0
+  // 预留底部与页脚空间（约 120px）
+  const available = window.innerHeight - top - 120
+  tableHeight.value = Math.max(360, Math.floor(available))
+}
 
 // 搜索条件
 const searchParams = reactive<API.AppQueryRequest>({
@@ -185,6 +194,11 @@ const fetchData = async () => {
 // 页面加载时请求一次
 onMounted(() => {
   fetchData()
+  updateTableHeight()
+  window.addEventListener('resize', updateTableHeight, { passive: true })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateTableHeight)
 })
 
 // 分页参数
@@ -266,7 +280,7 @@ const deleteApp = async (id: number | undefined) => {
 #appManagePage {
   padding: 24px;
   background: white;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .no-cover {

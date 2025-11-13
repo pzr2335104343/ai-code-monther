@@ -7,7 +7,9 @@ import com.rong.rongcodemother.model.entity.User;
 import com.rong.rongcodemother.model.vo.LoginUserVO;
 import com.rong.rongcodemother.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -61,4 +63,5 @@ public interface UserService extends IService<User> {
      * 根据用户查询条件获取QueryWrapper
      */
     QueryWrapper getQueryWrapper(UserQueryRequest userQueryRequest);
+
 }

@@ -3,32 +3,28 @@ import BasicLayout from '@/layouts/BasicLayout.vue'
 </script>
 
 <template>
-  <BasicLayout />
+  <a-config-provider
+    :theme="{
+      token: {
+        colorPrimary: '#6b8cff',
+        colorInfo: '#6b8cff',
+        colorBgBase: '#ffffff',
+        colorBgContainer: '#ffffff',
+        colorText: '#1f2430',
+        colorTextSecondary: '#5b6474',
+        borderRadius: 12,
+        borderRadiusLG: 14,
+        borderRadiusSM: 10,
+        boxShadow: '0 6px 24px rgba(32,54,93,0.08), 0 2px 8px rgba(32,54,93,0.06)'
+      }
+    }"
+  >
+    <BasicLayout />
+  </a-config-provider>
 </template>
 
 <style>
 #app {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   min-height: 100vh;
-}
-
-/* 全局样式优化 */
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
-
-html {
-  overflow-x: hidden;
 }
 </style>

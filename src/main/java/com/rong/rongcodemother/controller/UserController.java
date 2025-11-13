@@ -1,6 +1,7 @@
 package com.rong.rongcodemother.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.io.FileUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.rong.rongcodemother.annotation.AuthCheck;
 import com.rong.rongcodemother.common.BaseResponse;
@@ -10,6 +11,7 @@ import com.rong.rongcodemother.constant.UserConstant;
 import com.rong.rongcodemother.exception.BusinessException;
 import com.rong.rongcodemother.exception.ErrorCode;
 import com.rong.rongcodemother.exception.ThrowUtils;
+import com.rong.rongcodemother.manager.CosManager;
 import com.rong.rongcodemother.model.dto.user.*;
 import com.rong.rongcodemother.model.entity.User;
 import com.rong.rongcodemother.model.vo.LoginUserVO;
@@ -17,9 +19,14 @@ import com.rong.rongcodemother.model.vo.UserVO;
 import com.rong.rongcodemother.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+
 
 /**
  * 用户 控制层。
@@ -32,6 +39,9 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private CosManager cosManager;
 
     /**
      * 用户注册接口
@@ -54,9 +64,10 @@ public class UserController {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
-        LoginUserVO user = userService.userLogin(userAccount, userPassword,request);
+        LoginUserVO user = userService.userLogin(userAccount, userPassword, request);
         return ResultUtils.success(user);
     }
+
     /**
      * 用户注销接口
      */
@@ -162,6 +173,30 @@ public class UserController {
         List<UserVO> userVOList = userService.getUserVOList(userPage.getRecords());
         userVOPage.setRecords(userVOList);
         return ResultUtils.success(userVOPage);
+    }
+
+    /**
+     * @param avatar  头像文件
+     * @param request 请求
+     * @return 头像路径
+     * @throws IOException 异常
+     */
+    @PostMapping("/avatar/upload")
+    public BaseResponse<String> uploadAvatar(@RequestBody MultipartFile avatar, HttpServletRequest request) throws IOException {
+        ThrowUtils.throwIf(avatar.isEmpty(), ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        User user = userService.getById(loginUser.getId());
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+
+        String originalFileName = avatar.getOriginalFilename();
+        String suffix = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+        File tempFile = File.createTempFile("avatar", suffix);
+        FileCopyUtils.copy(avatar.getBytes(), tempFile);
+
+        tempFile.deleteOnExit();
+        String cosKey=String.format("user/avatar/%s_%s", user.getId(), suffix);
+        return ResultUtils.success(cosManager.uploadFile(cosKey, tempFile));
     }
 
 }

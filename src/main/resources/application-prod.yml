@@ -5,7 +5,7 @@ spring:
   # mysql
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://116.62.79.19:3306/rong_ai_code_mother?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&connectTimeout=30000&socketTimeout=60000
+    url: jdbc:mysql://110.42.141.105:3306/yu_ai_code_mother
     username: yu_ai_code_mother_user
     password: 12345678
   # redis

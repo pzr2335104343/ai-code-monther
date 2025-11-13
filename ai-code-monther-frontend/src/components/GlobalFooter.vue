@@ -2,15 +2,18 @@
   <a-layout-footer class="footer">
     <div class="footer-content">
       <p class="copyright">
-        <a
-          href="https://www.codefather.cn"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="author-link"
-        >
-          编程导航原创项目 by 程序员鱼皮
-        </a>
+        &copy; {{ new Date().getFullYear() }} buling 秒搭
       </p>
+      <div class="flex flex-wrap justify-center gap-4 md:gap-6">
+        <!-- ICP备案 -->
+        <a
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          class="hover:text-blue-600 transition-colors duration-300 flex items-center"
+        >
+          <i class="fa fa-shield mr-1"></i> 苏ICP备2024099995号-3
+        </a>
+      </div>
     </div>
   </a-layout-footer>
 </template>
@@ -21,12 +24,11 @@
 
 <style scoped>
 .footer {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+  /* 纯白底色，去除暖色渐变 */
+  background: #ffffff;
   text-align: center;
   padding: 20px;
-  margin-top: 40px;
-  border-top: 1px solid rgba(102, 126, 234, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .copyright {

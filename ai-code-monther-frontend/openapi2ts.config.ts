@@ -1,5 +1,5 @@
 export default {
   requestLibPath: "import request from '@/request'",
-  schemaPath: 'http://pangzerong.cn/api/v3/api-docs',
+  schemaPath: 'http://localhost:8123/api/v3/api-docs',
   serversPath: './src',
 }
