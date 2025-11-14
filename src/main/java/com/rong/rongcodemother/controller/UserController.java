@@ -195,7 +195,7 @@ public class UserController {
         FileCopyUtils.copy(avatar.getBytes(), tempFile);
 
         tempFile.deleteOnExit();
-        String cosKey=String.format("user/avatar/%s_%s", user.getId(), suffix);
+        String cosKey=String.format("user/avatar/%s%s", user.getId(), suffix);
         return ResultUtils.success(cosManager.uploadFile(cosKey, tempFile));
     }
 
